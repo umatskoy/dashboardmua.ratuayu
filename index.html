@@ -684,6 +684,26 @@
 
     .btn-invoice:hover { background: var(--pink-light); }
 
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-right: auto;
+    }
+
+    .btn-copy:hover { background: var(--bg-soft); border-color: var(--text-secondary); color: var(--text-primary); }
+    .btn-copy.copied { color: #2d5a0a; border-color: rgba(45,90,10,0.4); background: rgba(45,90,10,0.06); }
+
     .btn-edit {
       display: inline-flex;
       align-items: center;
@@ -1664,6 +1684,9 @@
       <!-- Dynamic content -->
     </div>
     <div class="modal-footer">
+      <button class="btn-copy" id="btnCopyDetail" onclick="copyBookingDetail()">
+        <i class="ti ti-copy" style="font-size:13px;"></i> Copy Detail
+      </button>
       <button class="btn-invoice" id="btnExportInvoice" onclick="exportInvoicePDF()">
         <i class="ti ti-file-invoice" style="font-size:13px;"></i> Export Invoice
       </button>
@@ -2292,6 +2315,70 @@
     document.getElementById('modalOverlay').classList.remove('show');
   }
 
+
+  /* ── Copy Detail Booking ── */
+  function copyBookingDetail() {
+    if (!currentBooking) return;
+    const b = currentBooking;
+
+    const v = (val) => (val !== null && val !== undefined && String(val).trim() !== '') ? String(val).trim() : null;
+
+    const lines = [];
+    lines.push("📋 Detail Booking – Ratu Ayu MUA");
+
+    // KLIEN
+    const klienRows = [];
+    if (v(b.nama))   klienRows.push("Nama     : " + v(b.nama));
+    if (v(b.wa))     klienRows.push("WA       : " + v(b.wa));
+    if (v(b.email))  klienRows.push("Email    : " + v(b.email));
+    if (v(b.lokasi)) klienRows.push("Lokasi   : " + v(b.lokasi));
+    if (klienRows.length) { lines.push(""); lines.push("👤 KLIEN"); klienRows.forEach(r => lines.push(r)); }
+
+    // JADWAL
+    const jadwalRows = [];
+    if (v(b.tanggal))      jadwalRows.push("Tanggal      : " + fmtDateTime(b.tanggal));
+    if (v(b.jam_selesai) && fmtTime(b.jam_selesai) !== '-') jadwalRows.push("Jam Selesai  : " + fmtTime(b.jam_selesai));
+    if (v(b.jumlah_orang)) jadwalRows.push("Total Orang  : " + v(b.jumlah_orang) + " orang");
+    if (v(b.mua_bertugas))   jadwalRows.push("MUA Bertugas : " + v(b.mua_bertugas));
+    if (v(b.mua_bertugas_2)) jadwalRows.push("MUA Bertugas 2 : " + v(b.mua_bertugas_2));
+    if (v(b.hijab_stylist))  jadwalRows.push("Hijab Stylist: " + v(b.hijab_stylist));
+    if (v(b.hair_stylist))   jadwalRows.push("Hair Stylist : " + v(b.hair_stylist));
+    if (jadwalRows.length) { lines.push(""); lines.push("📅 JADWAL"); jadwalRows.forEach(r => lines.push(r)); }
+
+    // LAYANAN
+    const layananRows = [];
+    if (v(b.paket))           layananRows.push("Paket    : " + v(b.paket));
+    if (v(b.addon))           layananRows.push("Add On   : " + v(b.addon));
+    const transport = parseRp(b.transport_biaya);
+    if (transport > 0)        layananRows.push("Transport: " + fmtRp(transport));
+    if (layananRows.length) { lines.push(""); lines.push("💄 LAYANAN"); layananRows.forEach(r => lines.push(r)); }
+
+    // PEMBAYARAN
+    const bayarRows = [];
+    if (v(b.subtotal)) bayarRows.push("Subtotal  : " + fmtRp(parseRp(b.subtotal)));
+    if (v(b.dp))       bayarRows.push("DP        : " + fmtRp(parseRp(b.dp)));
+    const subtotal = parseRp(b.subtotal);
+    const dp = parseRp(b.dp);
+    const lunas = ["lunas","confirmed"].includes((b.status||"").toLowerCase());
+    const sisa = lunas ? 0 : Math.max(0, subtotal - dp);
+    bayarRows.push("Sisa Bayar: " + fmtRp(sisa));
+    if (v(b.status)) bayarRows.push("Status    : " + v(b.status).toUpperCase());
+    if (bayarRows.length) { lines.push(""); lines.push("💰 PEMBAYARAN"); bayarRows.forEach(r => lines.push(r)); }
+
+    const text = lines.join("\n");
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("btnCopyDetail");
+      btn.classList.add("copied");
+      btn.innerHTML = '<i class="ti ti-check" style="font-size:13px;"></i> Tersalin';
+      setTimeout(() => {
+        btn.classList.remove("copied");
+        btn.innerHTML = '<i class="ti ti-copy" style="font-size:13px;"></i> Copy Detail';
+      }, 2000);
+    }).catch(() => {
+      showToast("Gagal menyalin teks", "error");
+    });
+  }
   /* ── Edit Modal ── */
   function dateToInputValue(val) {
     const d = parseDate(val);
