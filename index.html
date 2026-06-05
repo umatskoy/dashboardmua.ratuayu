@@ -1835,6 +1835,9 @@
       status:          pick('status', 'Status') || 'dp',
       mua_bertugas:    pick('mua_bertugas', 'mua bertugas', 'MUA Bertugas', 'mua', 'MUA', 'tim_mua', 'tim mua'),
       mua_bertugas_2:  pick('mua_bertugas_2', 'mua bertugas 2', 'MUA Bertugas 2', 'mua2', 'MUA 2'),
+      mua_bertugas_3:  pick('mua_bertugas_3', 'mua bertugas 3', 'MUA Bertugas 3', 'mua3'),
+      mua_bertugas_4:  pick('mua_bertugas_4', 'mua bertugas 4', 'MUA Bertugas 4', 'mua4'),
+      mua_bertugas_5:  pick('mua_bertugas_5', 'mua bertugas 5', 'MUA Bertugas 5', 'mua5'),
       hijab_stylist:   pick('hijab_stylist', 'hijab stylist', 'Hijab Stylist', 'hijab'),
       hair_stylist:    pick('hair_stylist', 'hair stylist', 'Hair Stylist', 'hair'),
       // simpan semua field asli juga, untuk jaga-jaga
@@ -2237,6 +2240,27 @@
           }</span>
         </div>
         <div class="detail-row">
+          <span class="detail-label">MUA Bertugas 3</span>
+          <span class="detail-value">${booking.mua_bertugas_3
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--pink-light);color:var(--pink);border:0.5px solid rgba(212,83,126,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.mua_bertugas_3}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">MUA Bertugas 4</span>
+          <span class="detail-value">${booking.mua_bertugas_4
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--pink-light);color:var(--pink);border:0.5px solid rgba(212,83,126,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.mua_bertugas_4}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">MUA Bertugas 5</span>
+          <span class="detail-value">${booking.mua_bertugas_5
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--pink-light);color:var(--pink);border:0.5px solid rgba(212,83,126,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.mua_bertugas_5}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
           <span class="detail-label">Hijab Stylist</span>
           <span class="detail-value">${booking.hijab_stylist
             ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#16a34a;border:0.5px solid rgba(22,163,74,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hijab_stylist}</span>`
@@ -2340,6 +2364,9 @@
     lines.push("Total Orang    : " + (v(b.jumlah_orang) !== '-' ? v(b.jumlah_orang) + " orang" : '-'));
     lines.push("MUA Bertugas   : " + v(b.mua_bertugas));
     lines.push("MUA Bertugas 2 : " + v(b.mua_bertugas_2));
+    lines.push("MUA Bertugas 3 : " + v(b.mua_bertugas_3));
+    lines.push("MUA Bertugas 4 : " + v(b.mua_bertugas_4));
+    lines.push("MUA Bertugas 5 : " + v(b.mua_bertugas_5));
     lines.push("Hijab Stylist  : " + v(b.hijab_stylist));
     lines.push("Hair Stylist   : " + v(b.hair_stylist));
 
@@ -2450,6 +2477,43 @@
             ).join('')}
             ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_2) && b.mua_bertugas_2
               ? `<option value="${b.mua_bertugas_2}" selected>${b.mua_bertugas_2}</option>` : ''}
+          </select>
+        </div>
+      </div>
+      <div class="edit-fields-row">
+        <div class="edit-field">
+          <label>MUA Bertugas 3 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <select id="ef_mua_bertugas_3">
+            <option value="">— Pilih MUA 3 —</option>
+            ${allTeam.filter(t => t.role === 'MUA').map(t =>
+              `<option value="${t.nama}" ${b.mua_bertugas_3 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+            ).join('')}
+            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_3) && b.mua_bertugas_3
+              ? `<option value="${b.mua_bertugas_3}" selected>${b.mua_bertugas_3}</option>` : ''}
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>MUA Bertugas 4 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <select id="ef_mua_bertugas_4">
+            <option value="">— Pilih MUA 4 —</option>
+            ${allTeam.filter(t => t.role === 'MUA').map(t =>
+              `<option value="${t.nama}" ${b.mua_bertugas_4 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+            ).join('')}
+            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_4) && b.mua_bertugas_4
+              ? `<option value="${b.mua_bertugas_4}" selected>${b.mua_bertugas_4}</option>` : ''}
+          </select>
+        </div>
+      </div>
+      <div class="edit-fields-row">
+        <div class="edit-field">
+          <label>MUA Bertugas 5 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <select id="ef_mua_bertugas_5">
+            <option value="">— Pilih MUA 5 —</option>
+            ${allTeam.filter(t => t.role === 'MUA').map(t =>
+              `<option value="${t.nama}" ${b.mua_bertugas_5 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+            ).join('')}
+            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_5) && b.mua_bertugas_5
+              ? `<option value="${b.mua_bertugas_5}" selected>${b.mua_bertugas_5}</option>` : ''}
           </select>
         </div>
       </div>
@@ -2597,6 +2661,9 @@
       status:          document.getElementById('ef_status').value,
       mua_bertugas:    document.getElementById('ef_mua_bertugas').value,
       mua_bertugas_2:  document.getElementById('ef_mua_bertugas_2').value,
+      mua_bertugas_3:  document.getElementById('ef_mua_bertugas_3').value,
+      mua_bertugas_4:  document.getElementById('ef_mua_bertugas_4').value,
+      mua_bertugas_5:  document.getElementById('ef_mua_bertugas_5').value,
       hijab_stylist:   document.getElementById('ef_hijab_stylist').value.trim(),
       hair_stylist:    document.getElementById('ef_hair_stylist').value.trim(),
     };
