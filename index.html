@@ -2321,49 +2321,45 @@
     if (!currentBooking) return;
     const b = currentBooking;
 
-    const v = (val) => (val !== null && val !== undefined && String(val).trim() !== '') ? String(val).trim() : null;
+    const v = (val) => (val !== null && val !== undefined && String(val).trim() !== '') ? String(val).trim() : '-';
 
     const lines = [];
-    lines.push("📋 Detail Booking – Ratu Ayu MUA");
+    lines.push("📋 Detail Booking \u2013 Ratu Ayu MUA");
 
-    // KLIEN
-    const klienRows = [];
-    if (v(b.nama))   klienRows.push("Nama     : " + v(b.nama));
-    if (v(b.wa))     klienRows.push("WA       : " + v(b.wa));
-    if (v(b.email))  klienRows.push("Email    : " + v(b.email));
-    if (v(b.lokasi)) klienRows.push("Lokasi   : " + v(b.lokasi));
-    if (klienRows.length) { lines.push(""); lines.push("👤 KLIEN"); klienRows.forEach(r => lines.push(r)); }
+    lines.push("");
+    lines.push("👤 KLIEN");
+    lines.push("Nama     : " + v(b.nama));
+    lines.push("WA       : " + v(b.wa));
+    lines.push("Email    : " + v(b.email));
+    lines.push("Lokasi   : " + v(b.lokasi));
 
-    // JADWAL
-    const jadwalRows = [];
-    if (v(b.tanggal))      jadwalRows.push("Tanggal      : " + fmtDateTime(b.tanggal));
-    if (v(b.jam_selesai) && fmtTime(b.jam_selesai) !== '-') jadwalRows.push("Jam Selesai  : " + fmtTime(b.jam_selesai));
-    if (v(b.jumlah_orang)) jadwalRows.push("Total Orang  : " + v(b.jumlah_orang) + " orang");
-    if (v(b.mua_bertugas))   jadwalRows.push("MUA Bertugas : " + v(b.mua_bertugas));
-    if (v(b.mua_bertugas_2)) jadwalRows.push("MUA Bertugas 2 : " + v(b.mua_bertugas_2));
-    if (v(b.hijab_stylist))  jadwalRows.push("Hijab Stylist: " + v(b.hijab_stylist));
-    if (v(b.hair_stylist))   jadwalRows.push("Hair Stylist : " + v(b.hair_stylist));
-    if (jadwalRows.length) { lines.push(""); lines.push("📅 JADWAL"); jadwalRows.forEach(r => lines.push(r)); }
+    lines.push("");
+    lines.push("📅 JADWAL");
+    lines.push("Tanggal        : " + (v(b.tanggal) !== '-' ? fmtDateTime(b.tanggal) : '-'));
+    lines.push("Jam Selesai    : " + (v(b.jam_selesai) !== '-' ? fmtTime(b.jam_selesai) : '-'));
+    lines.push("Total Orang    : " + (v(b.jumlah_orang) !== '-' ? v(b.jumlah_orang) + " orang" : '-'));
+    lines.push("MUA Bertugas   : " + v(b.mua_bertugas));
+    lines.push("MUA Bertugas 2 : " + v(b.mua_bertugas_2));
+    lines.push("Hijab Stylist  : " + v(b.hijab_stylist));
+    lines.push("Hair Stylist   : " + v(b.hair_stylist));
 
-    // LAYANAN
-    const layananRows = [];
-    if (v(b.paket))           layananRows.push("Paket    : " + v(b.paket));
-    if (v(b.addon))           layananRows.push("Add On   : " + v(b.addon));
+    lines.push("");
+    lines.push("💄 LAYANAN");
+    lines.push("Paket    : " + v(b.paket));
+    lines.push("Add On   : " + v(b.addon));
     const transport = parseRp(b.transport_biaya);
-    if (transport > 0)        layananRows.push("Transport: " + fmtRp(transport));
-    if (layananRows.length) { lines.push(""); lines.push("💄 LAYANAN"); layananRows.forEach(r => lines.push(r)); }
+    lines.push("Transport: " + (transport > 0 ? fmtRp(transport) : '-'));
 
-    // PEMBAYARAN
-    const bayarRows = [];
-    if (v(b.subtotal)) bayarRows.push("Subtotal  : " + fmtRp(parseRp(b.subtotal)));
-    if (v(b.dp))       bayarRows.push("DP        : " + fmtRp(parseRp(b.dp)));
+    lines.push("");
+    lines.push("💰 PEMBAYARAN");
+    lines.push("Subtotal  : " + (parseRp(b.subtotal) > 0 ? fmtRp(parseRp(b.subtotal)) : '-'));
+    lines.push("DP        : " + (parseRp(b.dp) > 0 ? fmtRp(parseRp(b.dp)) : '-'));
     const subtotal = parseRp(b.subtotal);
     const dp = parseRp(b.dp);
     const lunas = ["lunas","confirmed"].includes((b.status||"").toLowerCase());
     const sisa = lunas ? 0 : Math.max(0, subtotal - dp);
-    bayarRows.push("Sisa Bayar: " + fmtRp(sisa));
-    if (v(b.status)) bayarRows.push("Status    : " + v(b.status).toUpperCase());
-    if (bayarRows.length) { lines.push(""); lines.push("💰 PEMBAYARAN"); bayarRows.forEach(r => lines.push(r)); }
+    lines.push("Sisa Bayar: " + fmtRp(sisa));
+    lines.push("Status    : " + (v(b.status) !== '-' ? v(b.status).toUpperCase() : '-'));
 
     const text = lines.join("\n");
 
@@ -2379,7 +2375,8 @@
       showToast("Gagal menyalin teks", "error");
     });
   }
-  /* ── Edit Modal ── */
+
+    /* ── Edit Modal ── */
   function dateToInputValue(val) {
     const d = parseDate(val);
     if (!d) return '';
