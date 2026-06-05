@@ -2064,8 +2064,8 @@
       const muaBadge = (name) =>
         `<span style="background:var(--pink-light);color:var(--pink);border:0.5px solid rgba(212,83,126,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;">${name}</span>`;
 
-      const muaLabel = [booking.mua_bertugas, booking.mua_bertugas_2].filter(Boolean).length
-        ? [booking.mua_bertugas, booking.mua_bertugas_2].filter(Boolean).map(muaBadge).join(' ')
+      const muaLabel = [booking.mua_bertugas, booking.mua_bertugas_2, booking.mua_bertugas_3, booking.mua_bertugas_4, booking.mua_bertugas_5].filter(Boolean).length
+        ? [booking.mua_bertugas, booking.mua_bertugas_2, booking.mua_bertugas_3, booking.mua_bertugas_4, booking.mua_bertugas_5].filter(Boolean).map(muaBadge).join(' ')
         : `<span style="color:var(--border);font-size:11px;">—</span>`;
 
       const hijabLabel = booking.hijab_stylist
@@ -2809,7 +2809,7 @@
         const extra = bookings.length - maxShow;
         const chips = shown.map(b => {
           const jam   = fmtTime(b.jam_selesai) !== '-' ? fmtTime(b.jam_selesai) : '';
-          const mua   = [b.mua_bertugas, b.mua_bertugas_2].filter(Boolean).join('+');
+          const mua   = [b.mua_bertugas, b.mua_bertugas_2, b.mua_bertugas_3, b.mua_bertugas_4, b.mua_bertugas_5].filter(Boolean).join('+');
           const hijab = b.hijab_stylist  || '';
           const hair  = b.hair_stylist   || '';
           const label = [jam, mua, hijab, hair].filter(Boolean).join(' · ') || (b.nama || 'Booking');
@@ -2912,8 +2912,8 @@
         const encoded = encodeURIComponent(JSON.stringify(b));
         const muaBadge = (name) =>
           `<span style="background:var(--pink-light);color:var(--pink);border:0.5px solid rgba(212,83,126,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">${name}</span>`;
-        const muaLabel = [b.mua_bertugas, b.mua_bertugas_2].filter(Boolean).length
-          ? [b.mua_bertugas, b.mua_bertugas_2].filter(Boolean).map(muaBadge).join(' ')
+        const muaLabel = [b.mua_bertugas, b.mua_bertugas_2, b.mua_bertugas_3, b.mua_bertugas_4, b.mua_bertugas_5].filter(Boolean).length
+          ? [b.mua_bertugas, b.mua_bertugas_2, b.mua_bertugas_3, b.mua_bertugas_4, b.mua_bertugas_5].filter(Boolean).map(muaBadge).join(' ')
           : `<span style="color:var(--border);font-size:11px;">—</span>`;
         const hijabLabel = b.hijab_stylist
           ? `<span style="background:#f0fdf4;color:#16a34a;border:0.5px solid rgba(22,163,74,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">${b.hijab_stylist}</span>`
@@ -3239,7 +3239,7 @@
         if (!isNaN(d)) tglOrder = d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
       }
 
-      const muaNames = [b.mua_bertugas, b.mua_bertugas_2].filter(Boolean).join(', ') || '—';
+      const muaNames = [b.mua_bertugas, b.mua_bertugas_2, b.mua_bertugas_3, b.mua_bertugas_4, b.mua_bertugas_5].filter(Boolean).join(', ') || '—';
 
       const sisaHtml = b.status === 'lunas'
         ? `<span style="color:#2d5a0a;font-weight:600;">Lunas</span>`
