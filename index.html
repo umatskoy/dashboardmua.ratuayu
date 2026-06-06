@@ -3451,9 +3451,10 @@
 
     document.getElementById('keuanganCount').textContent = rows.length + ' transaksi';
 
-    const totalPendapatan = rows.reduce((s, b) => s + parseRp(b.subtotal), 0);
+    
     const totalDP         = rows.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
     const totalSisa       = rows.filter(b => b.status !== 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
+    const totalPendapatan = totalDP + totalSisa;
     const lunas           = rows.filter(b => b.status === 'lunas').length;
     const belumLunas      = rows.filter(b => b.status !== 'lunas').length;
 
