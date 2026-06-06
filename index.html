@@ -793,6 +793,45 @@
       margin-bottom: 5px;
     }
 
+    .mua-select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mua-select-wrapper select {
+      flex: 1;
+    }
+
+    .btn-clear-mua {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border: 0.5px solid var(--border);
+      background: var(--bg-soft);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+      transition: all 0.18s;
+      padding: 0;
+    }
+
+    .btn-clear-mua:hover {
+      background: rgba(212,83,126,0.08);
+      border-color: var(--pink);
+      color: var(--pink);
+    }
+
+    .btn-clear-mua:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
     .edit-field input,
     .edit-field select,
     .edit-field textarea {
@@ -2459,62 +2498,97 @@
       <div class="edit-fields-row">
         <div class="edit-field">
           <label>MUA Bertugas</label>
-          <select id="ef_mua_bertugas">
-            <option value="">— Pilih MUA —</option>
-            ${allTeam.filter(t => t.role === 'MUA').map(t =>
-              `<option value="${t.nama}" ${b.mua_bertugas === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas) && b.mua_bertugas
-              ? `<option value="${b.mua_bertugas}" selected>${b.mua_bertugas}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_mua_bertugas" onchange="updateClearBtn('ef_mua_bertugas')">
+              <option value="">— Pilih MUA —</option>
+              ${allTeam.filter(t => t.role === 'MUA').map(t =>
+                `<option value="${t.nama}" ${b.mua_bertugas === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas) && b.mua_bertugas
+                ? `<option value="${b.mua_bertugas}" selected>${b.mua_bertugas}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_mua_bertugas"
+              onclick="clearMuaField('ef_mua_bertugas')" title="Kosongkan"
+              ${!b.mua_bertugas ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
         <div class="edit-field">
           <label>MUA Bertugas 2 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <select id="ef_mua_bertugas_2">
-            <option value="">— Pilih MUA 2 —</option>
-            ${allTeam.filter(t => t.role === 'MUA').map(t =>
-              `<option value="${t.nama}" ${b.mua_bertugas_2 === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_2) && b.mua_bertugas_2
-              ? `<option value="${b.mua_bertugas_2}" selected>${b.mua_bertugas_2}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_mua_bertugas_2" onchange="updateClearBtn('ef_mua_bertugas_2')">
+              <option value="">— Pilih MUA 2 —</option>
+              ${allTeam.filter(t => t.role === 'MUA').map(t =>
+                `<option value="${t.nama}" ${b.mua_bertugas_2 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_2) && b.mua_bertugas_2
+                ? `<option value="${b.mua_bertugas_2}" selected>${b.mua_bertugas_2}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_mua_bertugas_2"
+              onclick="clearMuaField('ef_mua_bertugas_2')" title="Kosongkan"
+              ${!b.mua_bertugas_2 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
       </div>
       <div class="edit-fields-row">
         <div class="edit-field">
           <label>MUA Bertugas 3 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <select id="ef_mua_bertugas_3">
-            <option value="">— Pilih MUA 3 —</option>
-            ${allTeam.filter(t => t.role === 'MUA').map(t =>
-              `<option value="${t.nama}" ${b.mua_bertugas_3 === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_3) && b.mua_bertugas_3
-              ? `<option value="${b.mua_bertugas_3}" selected>${b.mua_bertugas_3}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_mua_bertugas_3" onchange="updateClearBtn('ef_mua_bertugas_3')">
+              <option value="">— Pilih MUA 3 —</option>
+              ${allTeam.filter(t => t.role === 'MUA').map(t =>
+                `<option value="${t.nama}" ${b.mua_bertugas_3 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_3) && b.mua_bertugas_3
+                ? `<option value="${b.mua_bertugas_3}" selected>${b.mua_bertugas_3}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_mua_bertugas_3"
+              onclick="clearMuaField('ef_mua_bertugas_3')" title="Kosongkan"
+              ${!b.mua_bertugas_3 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
         <div class="edit-field">
           <label>MUA Bertugas 4 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <select id="ef_mua_bertugas_4">
-            <option value="">— Pilih MUA 4 —</option>
-            ${allTeam.filter(t => t.role === 'MUA').map(t =>
-              `<option value="${t.nama}" ${b.mua_bertugas_4 === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_4) && b.mua_bertugas_4
-              ? `<option value="${b.mua_bertugas_4}" selected>${b.mua_bertugas_4}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_mua_bertugas_4" onchange="updateClearBtn('ef_mua_bertugas_4')">
+              <option value="">— Pilih MUA 4 —</option>
+              ${allTeam.filter(t => t.role === 'MUA').map(t =>
+                `<option value="${t.nama}" ${b.mua_bertugas_4 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_4) && b.mua_bertugas_4
+                ? `<option value="${b.mua_bertugas_4}" selected>${b.mua_bertugas_4}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_mua_bertugas_4"
+              onclick="clearMuaField('ef_mua_bertugas_4')" title="Kosongkan"
+              ${!b.mua_bertugas_4 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
       </div>
       <div class="edit-fields-row">
         <div class="edit-field">
           <label>MUA Bertugas 5 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <select id="ef_mua_bertugas_5">
-            <option value="">— Pilih MUA 5 —</option>
-            ${allTeam.filter(t => t.role === 'MUA').map(t =>
-              `<option value="${t.nama}" ${b.mua_bertugas_5 === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_5) && b.mua_bertugas_5
-              ? `<option value="${b.mua_bertugas_5}" selected>${b.mua_bertugas_5}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_mua_bertugas_5" onchange="updateClearBtn('ef_mua_bertugas_5')">
+              <option value="">— Pilih MUA 5 —</option>
+              ${allTeam.filter(t => t.role === 'MUA').map(t =>
+                `<option value="${t.nama}" ${b.mua_bertugas_5 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'MUA').find(t => t.nama === b.mua_bertugas_5) && b.mua_bertugas_5
+                ? `<option value="${b.mua_bertugas_5}" selected>${b.mua_bertugas_5}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_mua_bertugas_5"
+              onclick="clearMuaField('ef_mua_bertugas_5')" title="Kosongkan"
+              ${!b.mua_bertugas_5 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3528,6 +3602,21 @@
         allTeam = data.team || [];
       }
     } catch (err) { console.error('Error loading team:', err); }
+  }
+
+  /* ── Clear MUA field ── */
+  function clearMuaField(fieldId) {
+    const sel = document.getElementById(fieldId);
+    if (!sel) return;
+    sel.value = '';
+    updateClearBtn(fieldId);
+  }
+
+  function updateClearBtn(fieldId) {
+    const sel = document.getElementById(fieldId);
+    const btn = document.getElementById('clear_' + fieldId);
+    if (!sel || !btn) return;
+    btn.disabled = sel.value === '';
   }
 
   function syncPaketField() {
