@@ -3037,7 +3037,7 @@
       // Build entry chips: "jam · MUA · Hijab · Hair" per booking (max 2 tampil, sisanya "+N")
       let entriesHtml = '';
       if (hasBooking) {
-        const maxShow = 5;
+        const maxShow = 2;
       if (hasBooking) {
         const parseJam = (jam) => {
           if (!jam || jam === '-') return 9999;
@@ -3046,7 +3046,7 @@
           return (h || 0) * 60 + (m || 0);
         };
         bookings.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));
-        const maxShow = 5;
+        const maxShow = 2;
         const shown = bookings.slice(0, maxShow);
         
         const shown = bookings.slice(0, maxShow);
