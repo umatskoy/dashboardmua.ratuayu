@@ -1864,21 +1864,18 @@
 
   function fmtTime(val) {
     if (val === null || val === undefined || val === '') return '-';
-    const s = String(val).trim();
-    if (!s) return '-';
-    // ① Sudah string HH:MM atau HH:MM:SS — kembalikan langsung tanpa konversi apapun
-    if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-    // ② Angka serial Sheets: fraksi hari (mis. 0.8333... = 20:00)
+    // Angka serial Sheets: fraksi hari (misal 0.583333 = 14:00)
     if (typeof val === 'number') {
       const frac = val % 1;
       const totalMinutes = Math.round(frac * 24 * 60);
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+      return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
     }
-    // ③ ISO string dari Apps Script (mis. "1899-12-30T20:00:00.000Z")
-    //    Google Sheets enkode Time sebagai UTC epoch 1899 → jam UTC = jam asli
-    //    WAJIB pakai getUTCHours(), JANGAN getHours() (kena offset timezone browser)
+    const s = String(val).trim();
+    // Sudah format HH:MM atau HH:MM:SS — langsung tampilkan tanpa konversi
+    if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
+    // ISO string dari Sheets — ambil jam:menit apa adanya tanpa konversi
     if (s.includes('T')) {
       const d = new Date(s);
       if (!isNaN(d)) {
@@ -1889,22 +1886,66 @@
   }
 
   /* ── Normalize Booking Fields ── */
-  // Memetakan semua kemungkinan nama kolom dari Google Sheets ke key standar yang dipakai di JS
   function normalizeBooking(raw) {
-    // Buat lookup case-insensitive dari semua key yang ada
+    // Lookup: simpan semua variasi key agar tidak miskokoh nama kolom
     const lookup = {};
     Object.keys(raw).forEach(k => {
-      lookup[k.toLowerCase().replace(/\s+/g, '_')] = raw[k];
-      // juga simpan key aslinya
-      lookup[k.toLowerCase()] = raw[k];
+      const base = k.toLowerCase().trim();
+      lookup[base] = raw[k];                      // "jam selesai"
+      lookup[base.replace(/\s+/g, '_')] = raw[k]; // "jam_selesai"
+      lookup[base.replace(/_/g, ' ')] = raw[k];   // "jam selesai" dari "jam_selesai"
     });
 
     const pick = (...candidates) => {
       for (const c of candidates) {
-        const v = lookup[c.toLowerCase().replace(/\s+/g, '_')] ?? lookup[c.toLowerCase()];
-        if (v !== undefined && v !== null && v !== '') return v;
+        const keys = [
+          c.toLowerCase().trim(),
+          c.toLowerCase().trim().replace(/\s+/g, '_'),
+          c.toLowerCase().trim().replace(/_/g, ' '),
+        ];
+        for (const k of keys) {
+          if (k in lookup && lookup[k] !== undefined && lookup[k] !== null && lookup[k] !== '') {
+            return lookup[k];
+          }
+        }
       }
       return '';
+    };
+
+    // ─── Normalisasi jam selesai ke "HH:mm" WIB ───────────────────────────────
+    // Data dari Apps Script yang belum di-redeploy datang sebagai ISO UTC string
+    // mis. "1899-12-30T12:52:48.000Z" → jam sebenarnya di WIB = UTC + 7 jam = 19:52
+    // CATATAN: "1899-12-30" adalah epoch khusus Google Sheets untuk nilai Time-only
+    // Untuk epoch ini, jam UTC BUKAN jam asli — harus tambah offset WIB (+7)
+    // Setelah Apps Script di-redeploy dengan Code.gs baru, nilai akan datang
+    // sebagai string "20:00" langsung dan branch ① yang akan jalan.
+    const rawJam = pick('Jam Selesai', 'jam_selesai', 'jam selesai', 'jam');
+    const normalizeJam = (val) => {
+      if (val === '' || val === null || val === undefined) return '';
+      const s = String(val).trim();
+      // ① Sudah string "HH:MM" — langsung pakai (Apps Script sudah format dengan benar)
+      if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
+      // ② Angka serial Sheets (fraksi hari, mis. 0.8333 = 20:00)
+      if (typeof val === 'number') {
+        const frac = val % 1;
+        const totalMin = Math.round(frac * 24 * 60);
+        const h = Math.floor(totalMin / 60), m = totalMin % 60;
+        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+      }
+      // ③ ISO string dari Apps Script lama — "1899-12-30T13:00:00.000Z"
+      //    Ini adalah epoch Google Sheets untuk Time-only.
+      //    Jam UTC di string ini = jam asli MINUS offset WIB karena Sheets
+      //    menyimpannya tanpa konversi. Tambahkan +7 jam untuk WIB.
+      if (s.includes('T')) {
+        const d = new Date(s);
+        if (!isNaN(d)) {
+          const wibMinutes = d.getUTCHours() * 60 + d.getUTCMinutes() + 7 * 60;
+          const totalMin = wibMinutes % (24 * 60);
+          const h = Math.floor(totalMin / 60), m = totalMin % 60;
+          return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+        }
+      }
+      return s;
     };
 
     return {
@@ -1914,28 +1955,7 @@
       email:           pick('email', 'Email'),
       lokasi:          pick('lokasi', 'location', 'Lokasi'),
       tanggal:         pick('tanggal', 'date', 'Tanggal', 'tgl'),
-      jam_selesai:     (() => {
-        // Ambil nilai raw dari sheet — bisa berupa string HH:MM, angka serial, atau ISO string
-        const raw = pick('jam_selesai', 'jam selesai', 'Jam Selesai', 'jam');
-        if (raw === '' || raw === null || raw === undefined) return '';
-        const s = String(raw).trim();
-        // Sudah HH:MM — langsung pakai, tidak diubah
-        if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-        // Angka serial Sheets (fraksi hari, mis. 0.8333 = 20:00)
-        if (typeof raw === 'number') {
-          const frac = raw % 1;
-          const totalMin = Math.round(frac * 24 * 60);
-          const h = Math.floor(totalMin / 60), m = totalMin % 60;
-          return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
-        }
-        // ISO string dari Apps Script → Google Sheets simpan Time sebagai epoch 1899 UTC
-        // jam UTC = jam asli → pakai getUTCHours(), bukan getHours()
-        if (s.includes('T')) {
-          const d = new Date(s);
-          if (!isNaN(d)) return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
-        }
-        return s;
-      })(),
+      jam_selesai:     normalizeJam(rawJam),
       paket:           pick('paket', 'package', 'Paket', 'pak'),
       addon:           pick('addon', 'add_on', 'add on', 'Add On', 'tambahan', 'pilihan add on & jumlah', 'add on & jumlah'),
       jumlah_orang:    pick('jumlah_orang', 'jumlah orang', 'Jumlah Orang', 'orang', 'pax'),
