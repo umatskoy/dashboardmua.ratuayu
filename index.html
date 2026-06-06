@@ -362,7 +362,11 @@
       color: #2563eb;
       border: 0.5px solid rgba(37,99,235,0.3);
     }
-
+    .status-dp2 {
+      background: rgba(37,99,235,0.1);
+      color: #2563eb;
+      border: 0.5px solid rgba(37,99,235,0.3);
+    }
     .status-lunas {
       background: rgba(45,90,10,0.08);
       color: #2d5a0a;
@@ -1601,6 +1605,7 @@
             <option value="">Semua Status</option>
             <option value="pending">Perlu Update Data</option>
             <option value="dp">DP</option>
+             <option value="dp2">DP ke-2</option>
             <option value="confirmed">Butuh Team</option>
             <option value="lunas">Lunas</option>
           </select>
@@ -2171,8 +2176,8 @@
 
     filteredBookings.forEach(booking => {
       const status = booking.status || 'pending';
-      const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'lunas' ? 'status-lunas' : 'status-pending';
-      const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
+      const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'dp2' ? 'status-dp2' : status === 'lunas' ? 'status-lunas' : 'status-pending';
+      const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
 
       const total = parseRp(booking.subtotal);
       const dp = parseRp(booking.dp);
@@ -2301,9 +2306,9 @@
     const sisa = total - dp - dp2;
 
     const status = booking.status || 'pending';
-    const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'lunas' ? 'status-lunas' : 'status-pending';
-    const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
-
+    const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'dp2' ? 'status-dp2' : status === 'lunas' ? 'status-lunas' : 'status-pending';
+    const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
+    
     let html = `
       <div class="detail-section">
         <div class="detail-section-title">
@@ -2843,6 +2848,7 @@
         <select id="ef_status">
           <option value="pending"   ${b.status === 'pending'   ? 'selected' : ''}>Perlu Update Data</option>
           <option value="dp"        ${(b.status || 'dp') === 'dp' ? 'selected' : ''}>DP</option>
+            <option value="dp"        ${(b.status || 'dp') === 'dp' ? 'selected' : ''}>DP</option>
           <option value="confirmed" ${b.status === 'confirmed' ? 'selected' : ''}>Butuh Team</option>
           <option value="lunas"     ${b.status === 'lunas'     ? 'selected' : ''}>Lunas</option>
         </select>
@@ -3171,7 +3177,7 @@
           <td class="price-col">${fmtRp(total)}</td>
           <td>${fmtRp(dp)}</td>
           <td>${sisa > 0 ? '<span style="color:var(--pink);font-weight:600;">'+fmtRp(sisa)+'</span>' : '<span style="color:#2d5a0a;font-weight:600;">Lunas</span>'}</td>
-          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
+          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
         </tr>`;
       }).join('');
 
@@ -3514,7 +3520,7 @@
         <td class="price-col">${fmtRp(total)}</td>
         <td class="price-col">${fmtRp(dp)}</td>
         <td class="price-col">${sisaHtml}</td>
-        <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
+        <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
       </tr>`;
     }).join('');
 
