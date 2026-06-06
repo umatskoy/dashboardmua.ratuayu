@@ -1464,6 +1464,43 @@
       line-height: 1;
     }
 
+    /* ── KEUANGAN TABS ── */
+    .keuangan-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 1.5rem;
+    }
+
+    .keuangan-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -0.5px;
+      transition: all 0.18s;
+    }
+
+    .keuangan-tab:hover {
+      color: var(--pink);
+    }
+
+    .keuangan-tab.active {
+      color: var(--pink);
+      font-weight: 600;
+      border-bottom-color: var(--pink);
+    }
+
+    .keuangan-tab i { font-size: 15px; }
+
     .loading-spinner {
       display: none;
       text-align: center;
@@ -1700,6 +1737,15 @@
         <h2>Laporan Keuangan</h2>
         <span class="bookings-count" id="keuanganCount">0 transaksi</span>
       </div>
+      <!-- Tab -->
+      <div class="keuangan-tabs">
+        <button class="keuangan-tab active" id="tab-pemasukan" onclick="switchKeuanganTab('pemasukan')">
+          <i class="ti ti-arrow-down-circle"></i> Pemasukan
+        </button>
+        <button class="keuangan-tab" id="tab-pengeluaran" onclick="switchKeuanganTab('pengeluaran')">
+          <i class="ti ti-arrow-up-circle"></i> Pengeluaran
+        </button>
+      </div>
       <!-- Summary bar -->
       <div class="keuangan-summary" id="keuanganSummary"></div>
       <!-- Table -->
@@ -1770,6 +1816,8 @@
   let allBookings = [];
   let filteredBookings = [];
   let currentBooking = null; // booking yang sedang dibuka di modal
+  let allPengeluaran = [];
+  let keuanganActiveTab = 'pemasukan'; // tab aktif di halaman keuangan
 
   /* ── Format Helpers ── */
   function fmtRp(n) {
@@ -1925,6 +1973,17 @@
         allAddOns = data.addons || [];
         allTeam   = data.team   || [];
 
+        // Pengeluaran — fetch terpisah
+        try {
+          const resPengeluaran = await fetch(APPS_SCRIPT_URL + '?action=getPengeluaran');
+          const dataPengeluaran = await resPengeluaran.json();
+          if (dataPengeluaran.success) allPengeluaran = dataPengeluaran.pengeluaran || [];
+        } catch (errP) {
+          console.error('Error loading pengeluaran:', errP);
+          allPengeluaran = [];
+        }
+
+        if (currentPage === 'keuangan') renderKeuangan();
 
       } else {
         container.innerHTML = '<div class="empty-state"><i class="ti ti-alert-circle"></i><p>Gagal memuat data</p></div>';
@@ -3323,9 +3382,24 @@
     });
   }
 
+  function switchKeuanganTab(tab) {
+    keuanganActiveTab = tab;
+    document.getElementById('tab-pemasukan').classList.toggle('active', tab === 'pemasukan');
+    document.getElementById('tab-pengeluaran').classList.toggle('active', tab === 'pengeluaran');
+    renderKeuangan();
+  }
+
   function renderKeuangan() {
     const bulanFilter = document.getElementById('filterKeuanganBulan').value;
 
+    if (keuanganActiveTab === 'pengeluaran') {
+      renderKeuanganPengeluaran(bulanFilter);
+    } else {
+      renderKeuanganPemasukan(bulanFilter);
+    }
+  }
+
+  function renderKeuanganPemasukan(bulanFilter) {
     let rows = allBookings.filter(b => {
       if (!bulanFilter) return true;
       const d = parseDate(b.tanggal);
@@ -3429,6 +3503,64 @@
           <th>DP</th>
           <th>Sisa</th>
           <th>Status</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>`;
+  }
+
+  function renderKeuanganPengeluaran(bulanFilter) {
+    let rows = allPengeluaran.filter(p => {
+      if (!bulanFilter) return true;
+      const d = parseDate(p.tanggal);
+      if (!d) return false;
+      const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      return key === bulanFilter;
+    });
+
+    rows = [...rows].sort((a, b) => {
+      const da = parseDate(a.tanggal) || new Date(0);
+      const db = parseDate(b.tanggal) || new Date(0);
+      return db - da;
+    });
+
+    document.getElementById('keuanganCount').textContent = rows.length + ' pengeluaran';
+
+    const totalNominal = rows.reduce((s, p) => s + (p.nominal || 0), 0);
+
+    document.getElementById('keuanganSummary').innerHTML = `
+      <div class="keuangan-sum-card">
+        <div class="keuangan-sum-label"><i class="ti ti-arrow-up-circle" style="font-size:13px;"></i> Total Pengeluaran</div>
+        <div class="keuangan-sum-value" style="color:#dc2626;">${fmtRp(totalNominal)}</div>
+      </div>
+      <div class="keuangan-sum-card">
+        <div class="keuangan-sum-label"><i class="ti ti-list-numbers" style="font-size:13px;"></i> Jumlah Transaksi</div>
+        <div class="keuangan-sum-value" style="color:var(--text-primary);">${rows.length}</div>
+      </div>
+    `;
+
+    if (rows.length === 0) {
+      document.getElementById('keuanganTable').innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-receipt-off"></i>
+          <p>Tidak ada data pengeluaran</p>
+        </div>`;
+      return;
+    }
+
+    const tableRows = rows.map(p => {
+      return `<tr>
+        <td class="date-col" style="white-space:nowrap;">${fmtDate(p.tanggal)}</td>
+        <td>${p.keterangan || '—'}</td>
+        <td class="price-col" style="color:#dc2626;">${fmtRp(p.nominal)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('keuanganTable').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Tanggal</th>
+          <th>Keterangan</th>
+          <th>Nominal</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>`;
