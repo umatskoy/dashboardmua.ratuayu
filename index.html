@@ -362,11 +362,7 @@
       color: #2563eb;
       border: 0.5px solid rgba(37,99,235,0.3);
     }
-    .status-dp2 {
-      background: rgba(37,99,235,0.1);
-      color: #2563eb;
-      border: 0.5px solid rgba(37,99,235,0.3);
-    }
+
     .status-lunas {
       background: rgba(45,90,10,0.08);
       color: #2d5a0a;
@@ -1605,7 +1601,6 @@
             <option value="">Semua Status</option>
             <option value="pending">Perlu Update Data</option>
             <option value="dp">DP</option>
-             <option value="dp2">DP ke-2</option>
             <option value="confirmed">Butuh Team</option>
             <option value="lunas">Lunas</option>
           </select>
@@ -1939,7 +1934,6 @@
       jumlah_orang:    pick('jumlah_orang', 'jumlah orang', 'Jumlah Orang', 'orang', 'pax'),
       subtotal:        pick('subtotal', 'total', 'Total', 'harga', 'Subtotal'),
       dp:              pick('dp', 'down_payment', 'DP', 'uang_muka'),
-      dp2:             pick('dp2', 'dp_2', 'DP2', 'DP ke-2'),
       transport_biaya: pick('transport_biaya', 'transport biaya', 'Transport Biaya', 'transport', 'biaya_transport'),
       bukti:           pick('bukti', 'bukti_transfer', 'Bukti Transfer', 'bukti transfer'),
       status:          pick('status', 'Status') || 'dp',
@@ -2176,8 +2170,8 @@
 
     filteredBookings.forEach(booking => {
       const status = booking.status || 'pending';
-      const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'dp2' ? 'status-dp2' : status === 'lunas' ? 'status-lunas' : 'status-pending';
-      const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
+      const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'lunas' ? 'status-lunas' : 'status-pending';
+      const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
 
       const total = parseRp(booking.subtotal);
       const dp = parseRp(booking.dp);
@@ -2234,14 +2228,15 @@
     filteredBookings.forEach(b => {
       const subtotal = parseRp(b.subtotal);
       const dp       = parseRp(b.dp);
-      const sisa     = Math.max(0, subtotal - dp);
+      const dp2      = parseRp(b.dp2);
+      const sisa     = Math.max(0, subtotal - dp - dp2);
       const status   = (b.status || '').toLowerCase().trim();
       const sudahLunas = status === 'confirmed' || status === 'lunas';
 
       totalOrang        += parseInt(b.jumlah_orang) || 0;
-      totalDpDiterima   += dp;                          // DP selalu diterima
-      totalPelunasan    += sudahLunas ? sisa : 0;       // sisa baru masuk kalau lunas
-      menungguPelunasan += sudahLunas ? 0 : sisa;       // sisa yang masih outstanding
+      totalDpDiterima   += dp + dp2;                    // DP + DP ke-2 selalu diterima
+      totalPelunasan    += sudahLunas ? sisa : 0;
+      menungguPelunasan += sudahLunas ? 0 : sisa;
     });
 
     const totalRevenue = totalDpDiterima + totalPelunasan;
@@ -2302,13 +2297,12 @@
 
     const total = parseRp(booking.subtotal);
     const dp = parseRp(booking.dp);
-    const dp2 = parseRp(booking.dp2);
-    const sisa = total - dp - dp2;
+    const sisa = total - dp;
 
     const status = booking.status || 'pending';
-    const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'dp2' ? 'status-dp2' : status === 'lunas' ? 'status-lunas' : 'status-pending';
-    const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
-    
+    const statusClass = status === 'confirmed' ? 'status-confirmed' : status === 'dp' ? 'status-dp' : status === 'lunas' ? 'status-lunas' : 'status-pending';
+    const statusText = status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data';
+
     let html = `
       <div class="detail-section">
         <div class="detail-section-title">
@@ -2429,11 +2423,6 @@
           <span class="detail-label">DP</span>
           <span class="detail-value">${fmtRp(dp)}</span>
         </div>
-        ${parseRp(booking.dp2) > 0 ? `
-        <div class="detail-row">
-          <span class="detail-label">DP ke-2</span>
-          <span class="detail-value">${fmtRp(parseRp(booking.dp2))}</span>
-        </div>` : ''}
         <div class="detail-row">
           <span class="detail-label">Sisa Bayar</span>
           <span class="detail-value highlight">${fmtRp(sisa)}</span>
@@ -2523,12 +2512,10 @@
     lines.push("💰 PEMBAYARAN");
     lines.push("Subtotal  : " + (parseRp(b.subtotal) > 0 ? fmtRp(parseRp(b.subtotal)) : '-'));
     lines.push("DP        : " + (parseRp(b.dp) > 0 ? fmtRp(parseRp(b.dp)) : '-'));
-    if (parseRp(b.dp2) > 0) lines.push("DP ke-2   : " + fmtRp(parseRp(b.dp2)));
     const subtotal = parseRp(b.subtotal);
     const dp = parseRp(b.dp);
-    const dp2 = parseRp(b.dp2);
     const lunas = ["lunas","confirmed"].includes((b.status||"").toLowerCase());
-    const sisa = lunas ? 0 : Math.max(0, subtotal - dp - dp2);
+    const sisa = lunas ? 0 : Math.max(0, subtotal - dp);
     lines.push("Sisa Bayar: " + fmtRp(sisa));
     lines.push("Status    : " + (v(b.status) !== '-' ? v(b.status).toUpperCase() : '-'));
 
@@ -2837,18 +2824,11 @@
           <input type="number" id="ef_dp" value="${parseRp(b.dp) || ''}" placeholder="0">
         </div>
       </div>
-      <div class="edit-fields-row">
-        <div class="edit-field">
-          <label>DP ke-2 (Rp) <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <input type="number" id="ef_dp2" value="${parseRp(b.dp2) || ''}" placeholder="0">
-        </div>
-      </div>
       <div class="edit-field">
         <label>Status</label>
         <select id="ef_status">
           <option value="pending"   ${b.status === 'pending'   ? 'selected' : ''}>Perlu Update Data</option>
           <option value="dp"        ${(b.status || 'dp') === 'dp' ? 'selected' : ''}>DP</option>
-            <option value="dp2"       ${b.status === 'dp2' ? 'selected' : ''}>DP ke-2</option>
           <option value="confirmed" ${b.status === 'confirmed' ? 'selected' : ''}>Butuh Team</option>
           <option value="lunas"     ${b.status === 'lunas'     ? 'selected' : ''}>Lunas</option>
         </select>
@@ -2902,7 +2882,6 @@
       transport_biaya: document.getElementById('ef_transport').value.trim(),
       subtotal:        document.getElementById('ef_subtotal').value,
       dp:              document.getElementById('ef_dp').value,
-      dp2:             document.getElementById('ef_dp2').value,
       status:          document.getElementById('ef_status').value,
       mua_bertugas:    document.getElementById('ef_mua_bertugas').value,
       mua_bertugas_2:  document.getElementById('ef_mua_bertugas_2').value,
@@ -3050,7 +3029,7 @@
       // Build entry chips: "jam · MUA · Hijab · Hair" per booking (max 2 tampil, sisanya "+N")
       let entriesHtml = '';
       if (hasBooking) {
-        const maxShow = 5;
+        const maxShow = 2;
         const shown = bookings.slice(0, maxShow);
         const extra = bookings.length - maxShow;
         const chips = shown.map(b => {
@@ -3177,7 +3156,7 @@
           <td class="price-col">${fmtRp(total)}</td>
           <td>${fmtRp(dp)}</td>
           <td>${sisa > 0 ? '<span style="color:var(--pink);font-weight:600;">'+fmtRp(sisa)+'</span>' : '<span style="color:#2d5a0a;font-weight:600;">Lunas</span>'}</td>
-          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
+          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
         </tr>`;
       }).join('');
 
@@ -3451,8 +3430,8 @@
     document.getElementById('keuanganCount').textContent = rows.length + ' transaksi';
 
     const totalPendapatan = rows.reduce((s, b) => s + parseRp(b.subtotal), 0);
-    const totalDP         = rows.reduce((s, b) => s + parseRp(b.dp), 0);
-    const totalSisa       = rows.filter(b => b.status !== 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp)), 0);
+    const totalDP         = rows.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
+    const totalSisa       = rows.filter(b => b.status !== 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
     const lunas           = rows.filter(b => b.status === 'lunas').length;
     const belumLunas      = rows.filter(b => b.status !== 'lunas').length;
 
@@ -3491,7 +3470,8 @@
     const tableRows = rows.map(b => {
       const total  = parseRp(b.subtotal);
       const dp     = parseRp(b.dp);
-      const sisa   = Math.max(0, total - dp);
+      const dp2    = parseRp(b.dp2);
+      const sisa   = Math.max(0, total - dp - dp2);
       const status = b.status || 'pending';
 
       let tglOrder = '—';
@@ -3519,6 +3499,7 @@
         <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.lokasi||''}">${b.lokasi || '—'}</td>
         <td class="price-col">${fmtRp(total)}</td>
         <td class="price-col">${fmtRp(dp)}</td>
+        <td class="price-col">${dp2 > 0 ? fmtRp(dp2) : '—'}</td>
         <td class="price-col">${sisaHtml}</td>
         <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : 'Perlu Update Data'}</span></td>
       </tr>`;
@@ -3535,6 +3516,7 @@
           <th>Lokasi</th>
           <th>Total</th>
           <th>DP</th>
+          <th>DP ke-2</th>
           <th>Sisa</th>
           <th>Status</th>
         </tr></thead>
@@ -3812,15 +3794,13 @@
 
     const subtotal   = parseRp(b.subtotal);
     const dp         = parseRp(b.dp);
-    const dp2        = parseRp(b.dp2);
     const sudahLunas = ['lunas', 'confirmed'].includes((b.status || '').toLowerCase());
-    const sisa       = sudahLunas ? 0 : Math.max(0, subtotal - dp - dp2);
+    const sisa       = sudahLunas ? 0 : Math.max(0, subtotal - dp);
 
     const payX = W - MARGIN - 65;
     [
       { label: 'Subtotal',   val: rp(subtotal), bold: false, color: DARK  },
       { label: 'DP Dibayar', val: rp(dp),       bold: false, color: DARK  },
-      ...(dp2 > 0 ? [{ label: 'DP ke-2', val: rp(dp2), bold: false, color: DARK }] : []),
       { label: 'Sisa Bayar', val: rp(sisa),     bold: true,  color: sudahLunas ? GREEN : PINK },
     ].forEach(row => {
       txt(row.label, payX,           y, { size: 8, color: GRAY });
