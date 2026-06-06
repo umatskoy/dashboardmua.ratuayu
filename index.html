@@ -3050,7 +3050,7 @@
       // Build entry chips: "jam · MUA · Hijab · Hair" per booking (max 2 tampil, sisanya "+N")
       let entriesHtml = '';
       if (hasBooking) {
-        const maxShow = 2;
+        const maxShow = 5;
         const shown = bookings.slice(0, maxShow);
         const extra = bookings.length - maxShow;
         const chips = shown.map(b => {
