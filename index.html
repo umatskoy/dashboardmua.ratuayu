@@ -1876,14 +1876,13 @@
     const s = String(val).trim();
     // Sudah format HH:MM atau HH:MM:SS — langsung tampilkan tanpa konversi
     if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-    // ISO string dari Sheets — setelah deploy GAS terbaru, sudah diformat sebagai HH:mm WIB
-    // Tidak perlu tambah +7 lagi
+    // ISO string dari Sheets (misal 1899-12-29T17:28:48.000Z) — tambah +7 untuk WIB
     if (s.includes('T')) {
       const d = new Date(s);
       if (!isNaN(d)) {
-        const h = d.getUTCHours();
+        const wibH = (d.getUTCHours() + 7) % 24;
         const m = d.getUTCMinutes();
-        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+        return String(wibH).padStart(2, '0') + ':' + String(m).padStart(2, '0');
       }
     }
     return s;
