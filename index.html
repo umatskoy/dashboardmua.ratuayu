@@ -1133,6 +1133,20 @@
       text-align: center;
       margin-top: 1px;
     }
+    /* Blokir chip di sel kalender */
+.cal-blokir-chip {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+  margin-top: 2px;
+  display: block;
+}
 
     @media (max-width: 600px) {
       .cal-day { min-height: 52px; padding: 4px 2px; }
@@ -1990,6 +2004,7 @@
         allPakets = data.pakets || [];
         allAddOns = data.addons || [];
         allTeam   = data.team   || [];
+        allBlokir = data.blokir || [];
 
         // Pengeluaran — fetch terpisah
         try {
@@ -2994,15 +3009,22 @@
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Build booking map: key = "YYYY-MM-DD" → array of bookings
-    const bookingMap = {};
-    allBookings.forEach(b => {
-      const d = parseDate(b.tanggal);
-      if (!d) return;
-      const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      if (!bookingMap[key]) bookingMap[key] = [];
-      bookingMap[key].push(b);
-    });
+   // Build booking map: key = "YYYY-MM-DD" → array of bookings
+const bookingMap = {};
+allBookings.forEach(b => {
+  const d = parseDate(b.tanggal);
+  if (!d) return;
+  const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  if (!bookingMap[key]) bookingMap[key] = [];
+  bookingMap[key].push(b);
+});
+
+// Build blokir map: key = "YYYY-MM-DD" → blokir object
+const blokirMap = {};
+allBlokir.forEach(bl => {
+  if (!bl.tanggal) return;
+  blokirMap[bl.tanggal] = bl;
+});
 
     const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -3037,11 +3059,17 @@
       if (pendingCount > 0)   dotsHtml += `<span class="cal-dot pending"></span>`.repeat(Math.min(pendingCount, 3));
       if (confirmedCount > 0) dotsHtml += `<span class="cal-dot confirmed"></span>`.repeat(Math.min(confirmedCount, 3));
 
-      const classes = [
-        'cal-day',
-        isToday ? 'cal-today' : '',
-        hasBooking ? 'has-booking' : '',
-      ].filter(Boolean).join(' ');
+      const blokirInfo = blokirMap[dateKey];
+const classes = [
+  'cal-day',
+  isToday ? 'cal-today' : '',
+  hasBooking ? 'has-booking' : '',
+].filter(Boolean).join(' ');
+
+// Style blokir: background warna + opacity ringan
+const blokirStyle = blokirInfo
+  ? `background:${blokirInfo.warna}22; border-color:${blokirInfo.warna}66;`
+  : '';
 
       const encodedBookings = hasBooking ? encodeURIComponent(JSON.stringify(bookings.map(b => ({nama: b.nama, status: b.status||'pending'})))) : '';
       const onclickAttr = hasBooking
@@ -3067,13 +3095,18 @@
         entriesHtml = `<div class="cal-entries">${chips}${moreBadge}</div>`;
       }
 
-      html += `
-        <div class="${classes}" ${onclickAttr} 
-             onmouseenter="calShowPopover(event, '${dateKey}', '${encodedBookings}')"
-             onmouseleave="calHidePopover()">
-          <span class="cal-num">${day}</span>
-          ${entriesHtml}
-        </div>`;
+      const blokirChip = blokirInfo
+  ? `<span class="cal-blokir-chip" style="background:${blokirInfo.warna}33;color:${blokirInfo.warna};border:0.5px solid ${blokirInfo.warna}88;">${blokirInfo.label || blokirInfo.jenis}</span>`
+  : '';
+
+html += `
+  <div class="${classes}" style="${blokirStyle}" ${onclickAttr}
+       onmouseenter="calShowPopover(event, '${dateKey}', '${encodedBookings}', ${JSON.stringify(blokirInfo || null)})"
+       onmouseleave="calHidePopover()">
+    <span class="cal-num">${day}</span>
+    ${blokirChip}
+    ${entriesHtml}
+  </div>`;
     }
 
     // Next month padding to complete grid
@@ -3089,8 +3122,8 @@
     grid.innerHTML = html;
   }
 
-  function calShowPopover(e, dateKey, encodedBookings) {
-    if (!encodedBookings) return;
+  function calShowPopover(e, dateKey, encodedBookings, blokirInfo) {
+  if (!encodedBookings && !blokirInfo) return;
     const popover = document.getElementById('calPopover');
     let bookings = [];
     try { bookings = JSON.parse(decodeURIComponent(encodedBookings)); } catch(err) { return; }
@@ -3099,6 +3132,14 @@
     const d = new Date(yr, parseInt(mo)-1, parseInt(dy));
     const dateLabel = d.toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
 
+    let blokirHtml = '';
+if (blokirInfo) {
+  blokirHtml = `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--border);margin-bottom:4px;">
+    <span style="width:10px;height:10px;border-radius:3px;background:${blokirInfo.warna};flex-shrink:0;"></span>
+    <span style="font-size:12px;font-weight:600;color:${blokirInfo.warna};">${blokirInfo.jenis}</span>
+    ${blokirInfo.label ? `<span style="font-size:11px;color:var(--text-secondary);">— ${blokirInfo.label}</span>` : ''}
+  </div>`;
+}
     let itemsHtml = bookings.map(b => `
       <div class="cal-popover-item">
         <span class="cal-popover-name">${b.nama || 'Tanpa Nama'}</span>
@@ -3107,7 +3148,7 @@
         </span>
       </div>`).join('');
 
-    popover.innerHTML = `<div class="cal-popover-date">${dateLabel}</div>${itemsHtml}`;
+    popover.innerHTML = `<div class="cal-popover-date">${dateLabel}</div>${blokirHtml}${itemsHtml}`;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const pw = 240;
@@ -3627,6 +3668,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         allPakets = dataAll.pakets || [];
         allAddOns = dataAll.addons || [];
         allTeam   = dataAll.team   || [];
+        allBlokir = dataAll.blokir || [];
 
         populateMonthFilter();
         populatePaketFilter();
@@ -3865,6 +3907,7 @@ document.getElementById('keuanganSummary').innerHTML = `
   let allPakets = [];
   let allAddOns = [];
   let allTeam   = [];
+  let allBlokir = [];
   let _loadAllPromise = null; // track promise agar switchPage bisa tunggu
 
   function getPaketList() { return allPakets; }
