@@ -1866,11 +1866,9 @@
     if (val === null || val === undefined || val === '') return '-';
     const s = String(val).trim();
     if (!s) return '-';
-
-    // Sudah format HH:MM atau HH:MM:SS — kembalikan apa adanya, TANPA konversi apapun
+    // ① Sudah string HH:MM atau HH:MM:SS — kembalikan langsung tanpa konversi apapun
     if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-
-    // Angka serial Sheets: fraksi hari (mis. 0.8333... = 20:00)
+    // ② Angka serial Sheets: fraksi hari (mis. 0.8333... = 20:00)
     if (typeof val === 'number') {
       const frac = val % 1;
       const totalMinutes = Math.round(frac * 24 * 60);
@@ -1878,17 +1876,15 @@
       const m = totalMinutes % 60;
       return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
     }
-
-    // ISO string dari Apps Script (mis. "1899-12-30T20:00:00.000Z")
-    // Google Sheets menyimpan Time sebagai epoch 1899 dengan jam UTC = jam asli
-    // Gunakan getUTCHours() BUKAN getHours() agar tidak kena offset timezone browser
+    // ③ ISO string dari Apps Script (mis. "1899-12-30T20:00:00.000Z")
+    //    Google Sheets enkode Time sebagai UTC epoch 1899 → jam UTC = jam asli
+    //    WAJIB pakai getUTCHours(), JANGAN getHours() (kena offset timezone browser)
     if (s.includes('T')) {
       const d = new Date(s);
       if (!isNaN(d)) {
         return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
       }
     }
-
     return s;
   }
 
@@ -1919,20 +1915,21 @@
       lokasi:          pick('lokasi', 'location', 'Lokasi'),
       tanggal:         pick('tanggal', 'date', 'Tanggal', 'tgl'),
       jam_selesai:     (() => {
-        const rawJam = pick('jam_selesai', 'jam selesai', 'Jam Selesai', 'jam');
-        if (!rawJam && rawJam !== 0) return '';
-        const s = String(rawJam).trim();
-        // Sudah HH:MM — langsung pakai tanpa konversi
+        // Ambil nilai raw dari sheet — bisa berupa string HH:MM, angka serial, atau ISO string
+        const raw = pick('jam_selesai', 'jam selesai', 'Jam Selesai', 'jam');
+        if (raw === '' || raw === null || raw === undefined) return '';
+        const s = String(raw).trim();
+        // Sudah HH:MM — langsung pakai, tidak diubah
         if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
         // Angka serial Sheets (fraksi hari, mis. 0.8333 = 20:00)
-        if (typeof rawJam === 'number') {
-          const frac = rawJam % 1;
+        if (typeof raw === 'number') {
+          const frac = raw % 1;
           const totalMin = Math.round(frac * 24 * 60);
           const h = Math.floor(totalMin / 60), m = totalMin % 60;
           return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
         }
-        // ISO string dari Apps Script — Google Sheets enkode Time sebagai UTC epoch 1899
-        // jam UTC = jam asli yang dimaksud, JANGAN pakai getHours() karena kena offset browser
+        // ISO string dari Apps Script → Google Sheets simpan Time sebagai epoch 1899 UTC
+        // jam UTC = jam asli → pakai getUTCHours(), bukan getHours()
         if (s.includes('T')) {
           const d = new Date(s);
           if (!isNaN(d)) return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0');
