@@ -1866,25 +1866,23 @@
     if (val === null || val === undefined || val === '') return '-';
     // Angka serial Sheets: fraksi hari (misal 0.583333 = 14:00)
     if (typeof val === 'number') {
-      // Jika angka besar (>= 1), mungkin serial date+time — ambil bagian fraksinya
       const frac = val % 1;
       const totalMinutes = Math.round(frac * 24 * 60);
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-      // Konversi ke WIB (GMT+7) — Sheets menyimpan waktu di UTC
       const wibH = (h + 7) % 24;
       return String(wibH).padStart(2, '0') + ':' + String(m).padStart(2, '0');
     }
     const s = String(val).trim();
-    // Sudah format HH:MM atau HH:MM:SS — langsung tampilkan
+    // Sudah format HH:MM atau HH:MM:SS — langsung tampilkan tanpa konversi
     if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-    // ISO string dengan T (misal dari Date.toISOString)
+    // ISO string dari Sheets — sudah diformat oleh Apps Script sebagai HH:mm WIB
     if (s.includes('T')) {
-      const timePart = s.split('T')[1] || '';
-      if (timePart) {
-        const [hh, mm] = timePart.split(':');
-        const wibH = (parseInt(hh, 10) + 7) % 24;
-        return String(wibH).padStart(2, '0') + ':' + mm.slice(0, 2);
+      const d = new Date(s);
+      if (!isNaN(d)) {
+        const h = d.getUTCHours();
+        const m = d.getUTCMinutes();
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
       }
     }
     return s;
