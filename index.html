@@ -2118,16 +2118,25 @@
       }
     });
 
+   const parseJam = (jam) => {
+      if (!jam || jam === '-') return 9999;
+      const s = jam.toString().replace('.', ':');
+      const [h, m] = s.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
     upcoming.sort((a, b) => {
       const da = parseDate(a.tanggal) || new Date(0);
       const db = parseDate(b.tanggal) || new Date(0);
-      return da - db;
+      if (da - db !== 0) return da - db;
+      return parseJam(a.jam_selesai) - parseJam(b.jam_selesai);
     });
 
     past.sort((a, b) => {
       const da = parseDate(a.tanggal) || new Date(0);
       const db = parseDate(b.tanggal) || new Date(0);
-      return db - da;
+      if (db - da !== 0) return db - da;
+      return parseJam(a.jam_selesai) - parseJam(b.jam_selesai);
     });
 
     filteredBookings = [...upcoming, ...past];
