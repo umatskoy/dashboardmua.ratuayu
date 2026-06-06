@@ -3436,10 +3436,19 @@
       return key === bulanFilter;
     });
 
+   const parseJam = (jam) => {
+      if (!jam || jam === '-') return 9999;
+      const s = jam.toString().replace('.', ':');
+      const [h, m] = s.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
     rows = [...rows].sort((a, b) => {
-      const da = a.timestamp ? new Date(a.timestamp) : new Date(0);
-      const db = b.timestamp ? new Date(b.timestamp) : new Date(0);
-      return db - da;
+      const da = parseDate(a.tanggal) || new Date(0);
+      const db = parseDate(b.tanggal) || new Date(0);
+      if (da - db !== 0) return da - db;
+      return parseJam(a.jam_selesai) - parseJam(b.jam_selesai);
+  
     });
 
     document.getElementById('keuanganCount').textContent = rows.length + ' transaksi';
