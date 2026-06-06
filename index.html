@@ -3566,10 +3566,56 @@
       </table>`;
   }
 
+  /* ── Silent Refresh (background, tanpa spinner) ── */
+  async function silentRefresh() {
+    try {
+      const [resAll, resPengeluaran] = await Promise.all([
+        fetch(APPS_SCRIPT_URL + '?action=getAll'),
+        fetch(APPS_SCRIPT_URL + '?action=getPengeluaran')
+      ]);
+
+      const [dataAll, dataPengeluaran] = await Promise.all([
+        resAll.json(),
+        resPengeluaran.json()
+      ]);
+
+      if (dataAll.success) {
+        allBookings = (dataAll.bookings || []).map((b, i) => {
+          const norm = normalizeBooking(b);
+          norm._rowIndex = (dataAll.startRow || 2) + i;
+          return norm;
+        });
+        allPakets = dataAll.pakets || [];
+        allAddOns = dataAll.addons || [];
+        allTeam   = dataAll.team   || [];
+
+        populateMonthFilter();
+        populatePaketFilter();
+        populateMUAFilter();
+        populateKeuanganFilter();
+        filterBookings();
+        if (currentPage === 'kinerja') renderKinerja();
+        renderCalendar();
+      }
+
+      if (dataPengeluaran.success) {
+        allPengeluaran = dataPengeluaran.pengeluaran || [];
+      }
+
+      if (currentPage === 'keuangan') renderKeuangan();
+
+    } catch (err) {
+      console.warn('[Silent Refresh] Gagal:', err.message);
+    }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     switchPage('dashboard');
     renderCalendar();
     _loadAllPromise = loadBookings();
+
+    // Auto silent refresh setiap 30 detik
+    setInterval(silentRefresh, 30000);
   });
 
   /* ══════════════════════════════════════════════
