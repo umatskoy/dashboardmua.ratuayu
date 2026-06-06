@@ -1870,8 +1870,7 @@
       const totalMinutes = Math.round(frac * 24 * 60);
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-      const wibH = (h) % 24;
-      return String(wibH).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+      return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
     }
     const s = String(val).trim();
     // Sudah format HH:MM atau HH:MM:SS — langsung tampilkan tanpa konversi
