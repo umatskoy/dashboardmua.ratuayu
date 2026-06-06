@@ -1864,22 +1864,28 @@
 
   function fmtTime(val) {
     if (val === null || val === undefined || val === '') return '-';
-    // Angka serial Sheets: fraksi hari (misal 0.583333 = 14:00)
+    const s = String(val).trim();
+    if (!s) return '-';
+    // ① Sudah string "HH:MM" — langsung tampilkan (ini hasil Apps Script baru)
+    if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
+    // ② Angka serial Sheets (fraksi hari, mis. 0.8333 = 20:00)
     if (typeof val === 'number') {
       const frac = val % 1;
       const totalMinutes = Math.round(frac * 24 * 60);
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-      return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+      return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
     }
-    const s = String(val).trim();
-    // Sudah format HH:MM atau HH:MM:SS — langsung tampilkan tanpa konversi
-    if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-    // ISO string dari Sheets — ambil jam:menit apa adanya tanpa konversi
+    // ③ ISO string dari Apps Script lama — epoch 1899 Google Sheets
+    //    Tambahkan +7 jam (WIB) dan bulatkan detik ke menit terdekat
     if (s.includes('T')) {
       const d = new Date(s);
       if (!isNaN(d)) {
-        return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+        const totalSec = d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
+        const wibSec   = totalSec + 7 * 3600;
+        const totalMin = Math.round(wibSec / 60) % (24 * 60);
+        const h = Math.floor(totalMin / 60), m = totalMin % 60;
+        return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
       }
     }
     return s;
@@ -1887,13 +1893,13 @@
 
   /* ── Normalize Booking Fields ── */
   function normalizeBooking(raw) {
-    // Lookup: simpan semua variasi key agar tidak miskokoh nama kolom
+    // Lookup: simpan semua variasi key agar tidak mismatch nama kolom
     const lookup = {};
     Object.keys(raw).forEach(k => {
       const base = k.toLowerCase().trim();
-      lookup[base] = raw[k];                      // "jam selesai"
-      lookup[base.replace(/\s+/g, '_')] = raw[k]; // "jam_selesai"
-      lookup[base.replace(/_/g, ' ')] = raw[k];   // "jam selesai" dari "jam_selesai"
+      lookup[base] = raw[k];
+      lookup[base.replace(/\s+/g, '_')] = raw[k];
+      lookup[base.replace(/_/g, ' ')] = raw[k];
     });
 
     const pick = (...candidates) => {
@@ -1912,35 +1918,28 @@
       return '';
     };
 
-    // ─── Normalisasi jam selesai ke "HH:mm" WIB ───────────────────────────────
-    // Data dari Apps Script yang belum di-redeploy datang sebagai ISO UTC string
-    // mis. "1899-12-30T12:52:48.000Z" → jam sebenarnya di WIB = UTC + 7 jam = 19:52
-    // CATATAN: "1899-12-30" adalah epoch khusus Google Sheets untuk nilai Time-only
-    // Untuk epoch ini, jam UTC BUKAN jam asli — harus tambah offset WIB (+7)
-    // Setelah Apps Script di-redeploy dengan Code.gs baru, nilai akan datang
-    // sebagai string "20:00" langsung dan branch ① yang akan jalan.
+    // Normalisasi jam selesai ke string "HH:mm" WIB yang benar
     const rawJam = pick('Jam Selesai', 'jam_selesai', 'jam selesai', 'jam');
     const normalizeJam = (val) => {
       if (val === '' || val === null || val === undefined) return '';
       const s = String(val).trim();
-      // ① Sudah string "HH:MM" — langsung pakai (Apps Script sudah format dengan benar)
+      // ① Sudah string "HH:MM" — langsung pakai (Apps Script baru)
       if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
-      // ② Angka serial Sheets (fraksi hari, mis. 0.8333 = 20:00)
+      // ② Angka serial Sheets (fraksi hari)
       if (typeof val === 'number') {
         const frac = val % 1;
         const totalMin = Math.round(frac * 24 * 60);
         const h = Math.floor(totalMin / 60), m = totalMin % 60;
         return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
       }
-      // ③ ISO string dari Apps Script lama — "1899-12-30T13:00:00.000Z"
-      //    Ini adalah epoch Google Sheets untuk Time-only.
-      //    Jam UTC di string ini = jam asli MINUS offset WIB karena Sheets
-      //    menyimpannya tanpa konversi. Tambahkan +7 jam untuk WIB.
+      // ③ ISO string dari Apps Script lama — epoch 1899 UTC
+      //    Tambah +7 jam WIB, bulatkan detik ke menit terdekat
       if (s.includes('T')) {
         const d = new Date(s);
         if (!isNaN(d)) {
-          const wibMinutes = d.getUTCHours() * 60 + d.getUTCMinutes() + 7 * 60;
-          const totalMin = wibMinutes % (24 * 60);
+          const totalSec = d.getUTCHours() * 3600 + d.getUTCMinutes() * 60 + d.getUTCSeconds();
+          const wibSec   = totalSec + 7 * 3600;
+          const totalMin = Math.round(wibSec / 60) % (24 * 60);
           const h = Math.floor(totalMin / 60), m = totalMin % 60;
           return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
         }
