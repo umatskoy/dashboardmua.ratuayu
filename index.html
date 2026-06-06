@@ -3137,6 +3137,13 @@
     if (bookingsOnDate.length === 0) {
       body.innerHTML = '<div class="empty-state" style="padding:2rem;"><i class="ti ti-calendar-off" style="font-size:36px;color:var(--border);display:block;margin-bottom:8px;"></i><p>Tidak ada booking di tanggal ini</p></div>';
     } else {
+      const parseJam = (jam) => {
+      if (!jam || jam === '-') return 9999;
+      const s = jam.toString().replace('.', ':');
+      const [h, m] = s.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    bookingsOnDate.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));
       let rows = bookingsOnDate.map(b => {
         const total   = parseRp(b.subtotal);
         const dp      = parseRp(b.dp);
