@@ -3477,23 +3477,33 @@ if (blokirInfo) {
     });
   }
 
-  function populateKeuanganFilter() {
-    const sel = document.getElementById('filterKeuanganBulan');
-    const existing = new Set(Array.from(sel.options).map(o => o.value).filter(Boolean));
-    const months = new Set();
-    allBookings.forEach(b => {
-      const d = parseDate(b.tanggal);
-      if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
-    });
-    Array.from(months).sort().reverse().forEach(m => {
-      if (existing.has(m)) return;
-      const [yr, mo] = m.split('-');
-      const label = new Date(yr, parseInt(mo)-1).toLocaleDateString('id-ID', {month:'long', year:'numeric'});
-      const opt = document.createElement('option');
-      opt.value = m; opt.textContent = label;
-      sel.appendChild(opt);
-    });
-  }
+  // GANTI JADI INI:
+function populateKeuanganFilter() {
+  const sel = document.getElementById('filterKeuanganBulan');
+  const months = new Set();
+
+  // Ambil bulan dari booking (tanggal makeup)
+  allBookings.forEach(b => {
+    const d = parseDate(b.tanggal);
+    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+
+  // Ambil bulan dari pengeluaran
+  allPengeluaran.forEach(p => {
+    const d = parseDate(p.tanggal);
+    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+
+  // Rebuild seluruh dropdown dari awal
+  sel.innerHTML = '<option value="">Semua Bulan</option>';
+  Array.from(months).sort().reverse().forEach(m => {
+    const [yr, mo] = m.split('-');
+    const label = new Date(yr, parseInt(mo)-1).toLocaleDateString('id-ID', {month:'long', year:'numeric'});
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = label;
+    sel.appendChild(opt);
+  });
+}
 
   function switchKeuanganTab(tab) {
     keuanganActiveTab = tab;
@@ -3724,6 +3734,7 @@ document.getElementById('keuanganSummary').innerHTML = `
 
       if (dataPengeluaran.success) {
         allPengeluaran = dataPengeluaran.pengeluaran || [];
+      populateKeuanganFilter();
       }
 
       if (currentPage === 'keuangan') renderKeuangan();
