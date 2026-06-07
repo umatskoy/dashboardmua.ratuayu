@@ -1452,6 +1452,7 @@
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 1rem;
       margin-bottom: 1.5rem;
+      padding: 0 1.5rem;
     }
 
     .keuangan-sum-card {
@@ -1919,10 +1920,10 @@
       </div>
       <!-- Tab -->
       <div class="keuangan-tabs">
-       <button class="keuangan-tab" id="tab-ringkasan" onclick="switchKeuanganTab('ringkasan')">
+     <button class="keuangan-tab active" id="tab-ringkasan" onclick="switchKeuanganTab('ringkasan')">
   <i class="ti ti-layout-dashboard"></i> Ringkasan Finansial
 </button>
-<button class="keuangan-tab active" id="tab-pemasukan" onclick="switchKeuanganTab('pemasukan')">
+<button class="keuangan-tab" id="tab-pemasukan" onclick="switchKeuanganTab('pemasukan')">
   <i class="ti ti-arrow-down-circle"></i> Jurnal Pemasukan
 </button>
 <button class="keuangan-tab" id="tab-pengeluaran" onclick="switchKeuanganTab('pengeluaran')">
@@ -2000,7 +2001,7 @@
   let filteredBookings = [];
   let currentBooking = null; // booking yang sedang dibuka di modal
   let allPengeluaran = [];
-  let keuanganActiveTab = 'pemasukan'; // tab aktif di halaman keuangan
+  let keuanganActiveTab = 'ringkasan';
 
   /* ── Format Helpers ── */
   function fmtRp(n) {
