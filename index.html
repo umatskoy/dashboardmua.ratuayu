@@ -2139,16 +2139,25 @@
       }
     });
 
+   const parseJam = (jam) => {
+      if (!jam || jam === '-') return 9999;
+      const s = jam.toString().replace('.', ':');
+      const [h, m] = s.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
     upcoming.sort((a, b) => {
       const da = parseDate(a.tanggal) || new Date(0);
       const db = parseDate(b.tanggal) || new Date(0);
-      return da - db;
+      if (da - db !== 0) return da - db;
+      return parseJam(a.jam_selesai) - parseJam(b.jam_selesai);
     });
 
     past.sort((a, b) => {
       const da = parseDate(a.tanggal) || new Date(0);
       const db = parseDate(b.tanggal) || new Date(0);
-      return db - da;
+      if (db - da !== 0) return db - da;
+      return parseJam(a.jam_selesai) - parseJam(b.jam_selesai);
     });
 
     filteredBookings = [...upcoming, ...past];
@@ -3204,6 +3213,15 @@ if (blokirInfo) {
     if (bookingsOnDate.length === 0) {
       body.innerHTML = '<div class="empty-state" style="padding:2rem;"><i class="ti ti-calendar-off" style="font-size:36px;color:var(--border);display:block;margin-bottom:8px;"></i><p>Tidak ada booking di tanggal ini</p></div>';
     } else {
+
+      const parseJam = (jam) => {
+      if (!jam || jam === '-') return 9999;
+      const s = jam.toString().replace('.', ':');
+      const [h, m] = s.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    bookingsOnDate.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));      
+      
       let rows = bookingsOnDate.map(b => {
         const total   = parseRp(b.subtotal);
         const dp      = parseRp(b.dp);
@@ -3495,13 +3513,19 @@ if (blokirInfo) {
       const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
       return key === bulanFilter;
     });
+   const parseJam = (jam) => {
+      if (!jam || jam === '-') return 9999;
+      const s = jam.toString().replace('.', ':');
+      const [h, m] = s.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
 
     rows = [...rows].sort((a, b) => {
-      const da = a.timestamp ? new Date(a.timestamp) : new Date(0);
-      const db = b.timestamp ? new Date(b.timestamp) : new Date(0);
-      return db - da;
+      const da = parseDate(a.tanggal) || new Date(0);
+      const db = parseDate(b.tanggal) || new Date(0);
+      if (da - db !== 0) return da - db;
+      return parseJam(a.jam_selesai) - parseJam(b.jam_selesai);
     });
-
     document.getElementById('keuanganCount').textContent = rows.length + ' transaksi';
 
 const totalDP         = rows.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
