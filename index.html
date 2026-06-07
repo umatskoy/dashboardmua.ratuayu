@@ -3723,10 +3723,24 @@ document.getElementById('keuanganSummary').innerHTML = `
         allTeam   = dataAll.team   || [];
         allBlokir = dataAll.blokir || [];
 
+       // Simpan nilai filter yang sedang aktif sebelum rebuild dropdown
+        const savedMonth   = document.getElementById('filterMonth').value;
+        const savedPaket   = document.getElementById('filterPaket').value;
+        const savedMUA     = document.getElementById('filterMUA').value;
+        const savedStatus  = document.getElementById('filterStatus').value;
+        const savedKeuBulan = document.getElementById('filterKeuanganBulan').value;
+
         populateMonthFilter();
         populatePaketFilter();
         populateMUAFilter();
         populateKeuanganFilter();
+
+        // Restore nilai filter setelah dropdown di-rebuild
+        document.getElementById('filterMonth').value          = savedMonth;
+        document.getElementById('filterPaket').value          = savedPaket;
+        document.getElementById('filterMUA').value            = savedMUA;
+        document.getElementById('filterStatus').value         = savedStatus;
+        document.getElementById('filterKeuanganBulan').value  = savedKeuBulan;
         filterBookings();
         if (currentPage === 'kinerja') renderKinerja();
         renderCalendar();
