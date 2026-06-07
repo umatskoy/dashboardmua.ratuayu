@@ -3500,7 +3500,7 @@ if (blokirInfo) {
 const totalDP         = rows.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
 const totalSisa       = rows.filter(b => b.status !== 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
 const sisaLunas       = rows.filter(b => b.status === 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
-const totalPendapatan = totalDP + sisaLunas;
+const totalPendapatan = sisaLunas;
 const lunas           = rows.filter(b => b.status === 'lunas').length;
 const belumLunas      = rows.filter(b => b.status !== 'lunas').length;
 
