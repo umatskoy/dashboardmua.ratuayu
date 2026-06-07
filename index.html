@@ -3750,9 +3750,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         allPengeluaran = dataPengeluaran.pengeluaran || [];
       populateKeuanganFilter();
       }
-      document.getElementById('filterKeuanganBulan').value = savedKeuBulan;
-      }
-
+      
       if (currentPage === 'keuangan') renderKeuangan();
 
     } catch (err) {
