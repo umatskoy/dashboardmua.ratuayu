@@ -3126,7 +3126,9 @@ html += `
   if (!encodedBookings && !blokirInfo) return;
     const popover = document.getElementById('calPopover');
     let bookings = [];
-    try { bookings = JSON.parse(decodeURIComponent(encodedBookings)); } catch(err) { return; }
+    try { 
+  if (encodedBookings) bookings = JSON.parse(decodeURIComponent(encodedBookings)); 
+} catch(err) { /* lanjut */ }
 
     const [yr, mo, dy] = dateKey.split('-');
     const d = new Date(yr, parseInt(mo)-1, parseInt(dy));
