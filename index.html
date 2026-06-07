@@ -2005,6 +2005,7 @@
         allAddOns = data.addons || [];
         allTeam   = data.team   || [];
         allBlokir = data.blokir || [];
+        allKinerja = data.kinerja || [];
 
         // Pengeluaran — fetch terpisah
         try {
@@ -3352,107 +3353,55 @@ if (blokirInfo) {
      KINERJA TEAM
   ══════════════════════════════════════════════ */
   function renderKinerja() {
-    const container = document.getElementById('kinerjaContent');
+  const container = document.getElementById('kinerjaContent');
 
-    // Kumpulkan data per anggota tim
-    // Struktur: { nama: { paket: 0, orang: 0, role: 'mua'|'hijab'|'hair', bookings: [] } }
-    const teamMap = {};
+  if (!allKinerja || allKinerja.length === 0) {
+    container.innerHTML = `
+      <div class="kinerja-empty">
+        <i class="ti ti-users" style="font-size:40px;color:var(--border);display:block;margin-bottom:12px;"></i>
+        <p>Belum ada data kinerja.<br>Isi tab <strong>Kinerja</strong> di Google Sheet terlebih dahulu.</p>
+      </div>`;
+    return;
+  }
 
-    const addMember = (nama, role, jumlahOrang) => {
-      if (!nama) return;
-      if (!teamMap[nama]) teamMap[nama] = { paket: 0, orang: 0, role, bookings: [] };
-      teamMap[nama].paket++;
-      teamMap[nama].orang += parseInt(jumlahOrang) || 1;
-    };
+  // Sort by tanggal descending
+  const rows = [...allKinerja].sort((a, b) => {
+    const da = parseDate(a.tanggal) || new Date(0);
+    const db = parseDate(b.tanggal) || new Date(0);
+    return db - da;
+  });
 
-    allBookings.forEach(b => {
-      const orang = parseInt(b.jumlah_orang) || 1;
-      if (b.mua_bertugas)   addMember(b.mua_bertugas,   'mua',   orang);
-      if (b.mua_bertugas_2) addMember(b.mua_bertugas_2, 'mua',   orang);
-      if (b.hijab_stylist)  addMember(b.hijab_stylist,  'hijab', orang);
-      if (b.hair_stylist)   addMember(b.hair_stylist,   'hair',  orang);
-    });
+  const tableRows = rows.map(r => `
+    <tr>
+      <td class="date-col" style="white-space:nowrap;">${fmtDate(r.tanggal)}</td>
+      <td style="font-weight:500;">${r.team || '—'}</td>
+      <td style="font-size:12px;color:var(--text-secondary);">${r.paket || '—'}</td>
+      <td style="text-align:center;">${r.jumlah_orang || '—'}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.lokasi||''}">${r.lokasi || '—'}</td>
+    </tr>`).join('');
 
-    const members = Object.entries(teamMap);
-
-    if (members.length === 0) {
-      container.innerHTML = `
-        <div class="kinerja-empty">
-          <i class="ti ti-users" style="font-size:40px;color:var(--border);display:block;margin-bottom:12px;"></i>
-          <p>Belum ada data kinerja tim.<br>Isi field MUA, Hijab Stylist, dan Hair Stylist di setiap booking terlebih dahulu.</p>
-        </div>`;
-      return;
-    }
-
-    // Kelompokkan per role
-    const roles = {
-      mua:   { label: 'MUA',           icon: 'ti-brush',       color: 'var(--pink)',  bg: 'var(--pink-light)',  border: 'rgba(212,83,126,0.2)'  },
-      hijab: { label: 'Hijab Stylist',  icon: 'ti-sparkles',    color: '#16a34a',      bg: '#f0fdf4',            border: 'rgba(22,163,74,0.2)'   },
-      hair:  { label: 'Hair Stylist',   icon: 'ti-cut',         color: '#2563eb',      bg: '#eff6ff',            border: 'rgba(37,99,235,0.2)'   },
-    };
-
-    // Total semua booking untuk bar proporsi
-    const maxPaket = Math.max(...members.map(([,v]) => v.paket), 1);
-    const maxOrang = Math.max(...members.map(([,v]) => v.orang), 1);
-
-    let html = '';
-
-    // Render per role group
-    for (const [roleKey, roleMeta] of Object.entries(roles)) {
-      const roleMembers = members.filter(([, v]) => v.role === roleKey);
-      if (roleMembers.length === 0) continue;
-
-      // Sort by paket desc
-      roleMembers.sort((a, b) => b[1].paket - a[1].paket);
-
-      html += `
-        <div class="kinerja-section">
-          <div class="kinerja-section-title">
-            <i class="ti ${roleMeta.icon}" style="color:${roleMeta.color};font-size:16px;"></i>
-            ${roleMeta.label}
-          </div>
-          <div class="kinerja-cards">
-      `;
-
-      roleMembers.forEach(([nama, data]) => {
-        const pct = Math.round((data.paket / maxPaket) * 100);
-        html += `
-          <div class="kinerja-card" style="--kinerja-color:${roleMeta.color};--kinerja-bg:${roleMeta.bg};--kinerja-border:${roleMeta.border};">
-            <div class="kinerja-card-header">
-              <div class="kinerja-avatar" style="background:${roleMeta.bg};color:${roleMeta.color};border:1.5px solid ${roleMeta.border};">
-                ${nama.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div class="kinerja-name">${nama}</div>
-                <div class="kinerja-role-tag" style="color:${roleMeta.color};">${roleMeta.label}</div>
-              </div>
-            </div>
-
-            <div class="kinerja-stats">
-              <div class="kinerja-stat">
-                <div class="kinerja-stat-value" style="color:${roleMeta.color};">${data.paket}</div>
-                <div class="kinerja-stat-label">Paket Dikerjakan</div>
-              </div>
-              <div class="kinerja-stat-divider"></div>
-              <div class="kinerja-stat">
-                <div class="kinerja-stat-value" style="color:${roleMeta.color};">${data.orang}</div>
-                <div class="kinerja-stat-label">Total Orang di-MakeUp</div>
-              </div>
-            </div>
-
-            <div class="kinerja-bar-wrap">
-              <div class="kinerja-bar-label">
-                <span>Proporsi paket</span>
-                <span>${pct}%</span>
-              </div>
-              <div class="kinerja-bar-track">
-                <div class="kinerja-bar-fill" style="width:${pct}%;background:${roleMeta.color};"></div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
+  container.innerHTML = `
+    <div class="bookings-section">
+      <div class="bookings-header">
+        <h2>Kinerja Team</h2>
+        <span class="bookings-count">${rows.length} entri</span>
+      </div>
+      <div class="bookings-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Team</th>
+              <th>Paket</th>
+              <th style="text-align:center;">Jml Orang</th>
+              <th>Lokasi</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
       html += `</div></div>`;
     }
 
@@ -3722,6 +3671,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         allAddOns = dataAll.addons || [];
         allTeam   = dataAll.team   || [];
         allBlokir = dataAll.blokir || [];
+        allKinerja = dataAll.kinerja || [];
 
        // Simpan nilai filter yang sedang aktif sebelum rebuild dropdown
         const savedMonth   = document.getElementById('filterMonth').value;
@@ -3978,6 +3928,7 @@ document.getElementById('keuanganSummary').innerHTML = `
   let allAddOns = [];
   let allTeam   = [];
   let allBlokir = [];
+  let allKinerja = [];
   let _loadAllPromise = null; // track promise agar switchPage bisa tunggu
 
   function getPaketList() { return allPakets; }
