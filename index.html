@@ -3746,9 +3746,11 @@ document.getElementById('keuanganSummary').innerHTML = `
         renderCalendar();
       }
 
-      if (dataPengeluaran.success) {
+     if (dataPengeluaran.success) {
         allPengeluaran = dataPengeluaran.pengeluaran || [];
-      populateKeuanganFilter();
+        const savedKeuBulan2 = document.getElementById('filterKeuanganBulan').value;
+        populateKeuanganFilter();
+        document.getElementById('filterKeuanganBulan').value = savedKeuBulan2;
       }
       
       if (currentPage === 'keuangan') renderKeuangan();
