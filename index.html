@@ -495,7 +495,11 @@
     .bookings-table {
       overflow-x: auto;
     }
-
+/* Override khusus saat berisi ringkasan scorecard */
+.bookings-table:has(.ringkasan-scorecards) {
+  overflow-x: visible;
+  overflow-y: visible;
+}
     table {
       width: 100%;
       border-collapse: collapse;
@@ -3640,6 +3644,7 @@ console.log('[Keuangan] activeTab:', keuanganActiveTab);
   }
 }
 function renderKeuanganRingkasan(bulanFilter) {
+  console.log('[Ringkasan] dipanggil, allBookings:', allBookings.length, 'allPengeluaran:', allPengeluaran.length);
   // ── Filter data ──
   const filteredBookings = allBookings.filter(b => {
     if (!bulanFilter) return true;
