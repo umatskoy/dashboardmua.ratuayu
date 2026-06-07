@@ -3023,7 +3023,10 @@ allBookings.forEach(b => {
 const blokirMap = {};
 allBlokir.forEach(bl => {
   if (!bl.tanggal) return;
-  blokirMap[bl.tanggal] = bl;
+  const d = new Date(bl.tanggal);
+  if (isNaN(d)) return;
+  const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  blokirMap[key] = bl;
 });
 
     const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
