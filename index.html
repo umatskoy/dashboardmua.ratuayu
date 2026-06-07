@@ -2461,19 +2461,26 @@
       </div>
     `;
 
-    if (booking.bukti) {
-      html += `
-        <div class="detail-section">
-          <div class="detail-section-title">
-            <i class="ti ti-file"></i> Bukti Transfer
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">File</span>
-            <span class="detail-value">${booking.bukti}</span>
-          </div>
-        </div>
-      `;
-    }
+   // GANTI JADI INI:
+if (booking.bukti) {
+  const isUrl = booking.bukti.startsWith('http');
+  html += `
+    <div class="detail-section">
+      <div class="detail-section-title">
+        <i class="ti ti-file"></i> Bukti Transfer
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">File</span>
+        <span class="detail-value">
+          ${isUrl
+            ? `<a href="${booking.bukti}" target="_blank" style="color:var(--pink);text-decoration:none;word-break:break-all;">${booking.bukti}</a>`
+            : booking.bukti
+          }
+        </span>
+      </div>
+    </div>
+  `;
+}
 
     html += `
       <div class="detail-section">
