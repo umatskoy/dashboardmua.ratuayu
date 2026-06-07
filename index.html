@@ -1481,6 +1481,164 @@
       font-weight: 700;
       line-height: 1;
     }
+    /* ── RINGKASAN FINANSIAL ── */
+.ringkasan-scorecards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.scorecard {
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+  transition: box-shadow 0.2s;
+}
+
+.scorecard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+
+.scorecard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.scorecard-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+}
+
+.scorecard-icon {
+  font-size: 20px;
+  opacity: 0.25;
+}
+
+.scorecard-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.scorecard-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.ringkasan-chart-wrap {
+  margin: 0 1.5rem 1.5rem;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.ringkasan-chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.chart-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.chart-bars {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  height: 160px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 52px;
+  flex: 1;
+}
+
+.chart-bar-pair {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 130px;
+  width: 100%;
+  justify-content: center;
+}
+
+.chart-bar {
+  border-radius: 4px 4px 0 0;
+  min-height: 3px;
+  transition: height 0.4s ease;
+  flex: 1;
+  max-width: 20px;
+  cursor: pointer;
+  position: relative;
+}
+
+.chart-bar:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.chart-bar-label {
+  font-size: 9.5px;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
 
     /* ── KEUANGAN TABS ── */
     .keuangan-tabs {
@@ -1758,12 +1916,15 @@
       </div>
       <!-- Tab -->
       <div class="keuangan-tabs">
-        <button class="keuangan-tab active" id="tab-pemasukan" onclick="switchKeuanganTab('pemasukan')">
-          <i class="ti ti-arrow-down-circle"></i> Pemasukan
-        </button>
-        <button class="keuangan-tab" id="tab-pengeluaran" onclick="switchKeuanganTab('pengeluaran')">
-          <i class="ti ti-arrow-up-circle"></i> Pengeluaran
-        </button>
+       <button class="keuangan-tab" id="tab-ringkasan" onclick="switchKeuanganTab('ringkasan')">
+  <i class="ti ti-layout-dashboard"></i> Ringkasan Finansial
+</button>
+<button class="keuangan-tab active" id="tab-pemasukan" onclick="switchKeuanganTab('pemasukan')">
+  <i class="ti ti-arrow-down-circle"></i> Jurnal Pemasukan
+</button>
+<button class="keuangan-tab" id="tab-pengeluaran" onclick="switchKeuanganTab('pengeluaran')">
+  <i class="ti ti-arrow-up-circle"></i> Jurnal Pengeluaran
+</button>
       </div>
       <!-- Summary bar -->
       <div class="keuangan-summary" id="keuanganSummary"></div>
@@ -3335,7 +3496,13 @@ if (blokirInfo) {
 
     if (page === 'kalender') renderCalendar();
     if (page === 'kinerja')  renderKinerja();
-    if (page === 'keuangan') renderKeuangan();
+    if (page === 'keuangan') {
+  keuanganActiveTab = 'ringkasan';
+  document.getElementById('tab-ringkasan').classList.add('active');
+  document.getElementById('tab-pemasukan').classList.remove('active');
+  document.getElementById('tab-pengeluaran').classList.remove('active');
+  renderKeuangan();
+}
 
 
     const sidebar = document.getElementById('sidebar');
@@ -3449,23 +3616,190 @@ function populateKeuanganFilter() {
   });
 }
 
-  function switchKeuanganTab(tab) {
-    keuanganActiveTab = tab;
-    document.getElementById('tab-pemasukan').classList.toggle('active', tab === 'pemasukan');
-    document.getElementById('tab-pengeluaran').classList.toggle('active', tab === 'pengeluaran');
-    renderKeuangan();
-  }
+function switchKeuanganTab(tab) {
+  keuanganActiveTab = tab;
+  document.getElementById('tab-ringkasan').classList.toggle('active', tab === 'ringkasan');
+  document.getElementById('tab-pemasukan').classList.toggle('active', tab === 'pemasukan');
+  document.getElementById('tab-pengeluaran').classList.toggle('active', tab === 'pengeluaran');
+  renderKeuangan();
+}
 
   function renderKeuangan() {
-    const bulanFilter = document.getElementById('filterKeuanganBulan').value;
+  const bulanFilter = document.getElementById('filterKeuanganBulan').value;
 
-    if (keuanganActiveTab === 'pengeluaran') {
-      renderKeuanganPengeluaran(bulanFilter);
-    } else {
-      renderKeuanganPemasukan(bulanFilter);
-    }
+  if (keuanganActiveTab === 'ringkasan') {
+    renderKeuanganRingkasan(bulanFilter);
+  } else if (keuanganActiveTab === 'pengeluaran') {
+    renderKeuanganPengeluaran(bulanFilter);
+  } else {
+    renderKeuanganPemasukan(bulanFilter);
   }
+}
+function renderKeuanganRingkasan(bulanFilter) {
+  // ── Filter data ──
+  const filteredBookings = allBookings.filter(b => {
+    if (!bulanFilter) return true;
+    const d = parseDate(b.tanggal);
+    if (!d) return false;
+    return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
+  });
 
+  const filteredPengeluaran = allPengeluaran.filter(p => {
+    if (!bulanFilter) return true;
+    const d = parseDate(p.tanggal);
+    if (!d) return false;
+    return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
+  });
+
+  // ── Hitung Scorecard ──
+  let totalKas = 0, utangDP = 0, pendapatanDiakui = 0, proyeksiPelunasan = 0;
+
+  filteredBookings.forEach(b => {
+    const subtotal = parseRp(b.subtotal);
+    const dp       = parseRp(b.dp);
+    const dp2      = parseRp(b.dp2);
+    const sisa     = Math.max(0, subtotal - dp - dp2);
+    const lunas    = b.status === 'lunas';
+    const selesai  = b.status === 'lunas' || b.status === 'confirmed';
+
+    totalKas           += dp + dp2 + (lunas ? sisa : 0);
+    utangDP            += lunas ? 0 : dp + dp2;
+    pendapatanDiakui   += selesai ? subtotal : 0;
+    proyeksiPelunasan  += (!lunas && sisa > 0) ? sisa : 0;
+  });
+
+  const totalPengeluaran = filteredPengeluaran.reduce((s, p) => s + (p.nominal || 0), 0);
+  const netProfit        = pendapatanDiakui - totalPengeluaran;
+  const netMargin        = pendapatanDiakui > 0
+    ? Math.round((netProfit / pendapatanDiakui) * 100)
+    : 0;
+  const marginColor = netMargin >= 0 ? '#2d5a0a' : '#dc2626';
+
+  // ── Sembunyikan summary bar & count (tidak relevan di tab ini) ──
+  document.getElementById('keuanganSummary').innerHTML = '';
+  document.getElementById('keuanganCount').textContent = '';
+
+  // ── Build tren bulanan (semua data, bukan hanya yang difilter) ──
+  const trenMap = {};
+  allBookings.forEach(b => {
+    const d = parseDate(b.tanggal);
+    if (!d) return;
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    if (!trenMap[key]) trenMap[key] = { pemasukan: 0, pengeluaran: 0 };
+    const dp  = parseRp(b.dp) + parseRp(b.dp2);
+    const lunas = b.status === 'lunas';
+    const sisa  = Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2));
+    trenMap[key].pemasukan += dp + (lunas ? sisa : 0);
+  });
+  allPengeluaran.forEach(p => {
+    const d = parseDate(p.tanggal);
+    if (!d) return;
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    if (!trenMap[key]) trenMap[key] = { pemasukan: 0, pengeluaran: 0 };
+    trenMap[key].pengeluaran += p.nominal || 0;
+  });
+
+  const trenKeys = Object.keys(trenMap).sort();
+  const maxTren  = Math.max(...trenKeys.flatMap(k => [trenMap[k].pemasukan, trenMap[k].pengeluaran]), 1);
+
+  const barsHtml = trenKeys.map(key => {
+    const [yr, mo] = key.split('-');
+    const label = new Date(yr, parseInt(mo)-1).toLocaleDateString('id-ID', { month:'short', year:'2-digit' });
+    const pct   = (v) => Math.max(3, Math.round((v / maxTren) * 120));
+    const p     = trenMap[key].pemasukan;
+    const e     = trenMap[key].pengeluaran;
+    return `
+      <div class="chart-bar-group">
+        <div class="chart-bar-pair">
+          <div class="chart-bar" style="height:${pct(p)}px;background:var(--pink);"
+               data-tip="${fmtRp(p)}"></div>
+          <div class="chart-bar" style="height:${pct(e)}px;background:#e5e7eb;"
+               data-tip="${fmtRp(e)}"></div>
+        </div>
+        <div class="chart-bar-label">${label}</div>
+      </div>`;
+  }).join('');
+
+  // ── Render ke container ──
+  document.getElementById('keuanganTable').innerHTML = `
+    <div class="ringkasan-scorecards">
+
+      <div class="scorecard">
+        <div class="scorecard-header">
+          <div class="scorecard-label">Total Kas di Bank</div>
+          <i class="ti ti-building-bank scorecard-icon" style="color:var(--pink);"></i>
+        </div>
+        <div class="scorecard-value" style="color:var(--pink);">${fmtRp(totalKas)}</div>
+        <div class="scorecard-sub">Total Saldo Rekening Masuk</div>
+      </div>
+
+      <div class="scorecard">
+        <div class="scorecard-header">
+          <div class="scorecard-label">Utang DP (Deferred)</div>
+          <i class="ti ti-clock-dollar scorecard-icon" style="color:#f59e0b;"></i>
+        </div>
+        <div class="scorecard-value" style="color:#f59e0b;">${fmtRp(utangDP)}</div>
+        <div class="scorecard-sub">DP yang Belum Jadi Hak Bisnis</div>
+      </div>
+
+      <div class="scorecard">
+        <div class="scorecard-header">
+          <div class="scorecard-label">Pendapatan Diakui</div>
+          <i class="ti ti-circle-check scorecard-icon" style="color:#2d5a0a;"></i>
+        </div>
+        <div class="scorecard-value" style="color:#2d5a0a;">${fmtRp(pendapatanDiakui)}</div>
+        <div class="scorecard-sub">Dari Acara Selesai / Status Lunas & Butuh Team</div>
+      </div>
+
+      <div class="scorecard">
+        <div class="scorecard-header">
+          <div class="scorecard-label">Proyeksi Pelunasan</div>
+          <i class="ti ti-trending-up scorecard-icon" style="color:#2563eb;"></i>
+        </div>
+        <div class="scorecard-value" style="color:#2563eb;">${fmtRp(proyeksiPelunasan)}</div>
+        <div class="scorecard-sub">Piutang Klien Aktif (Belum Lunas)</div>
+      </div>
+
+      <div class="scorecard">
+        <div class="scorecard-header">
+          <div class="scorecard-label">Total Pengeluaran</div>
+          <i class="ti ti-arrow-up-circle scorecard-icon" style="color:#dc2626;"></i>
+        </div>
+        <div class="scorecard-value" style="color:#dc2626;">${fmtRp(totalPengeluaran)}</div>
+        <div class="scorecard-sub">Beban Biaya Operasional</div>
+      </div>
+
+      <div class="scorecard">
+        <div class="scorecard-header">
+          <div class="scorecard-label">Net Profit Margin</div>
+          <i class="ti ti-chart-pie scorecard-icon" style="color:${marginColor};"></i>
+        </div>
+        <div class="scorecard-value" style="color:${marginColor};">${netMargin}%</div>
+        <div class="scorecard-sub">Dari Pendapatan Diakui − Pengeluaran</div>
+      </div>
+
+    </div>
+
+    <div class="ringkasan-chart-wrap">
+      <div class="ringkasan-chart-title">
+        <i class="ti ti-chart-bar" style="color:var(--pink);font-size:15px;"></i>
+        Tren Pemasukan vs Pengeluaran Bulanan
+      </div>
+      <div class="chart-legend">
+        <div class="chart-legend-item">
+          <div class="chart-legend-dot" style="background:var(--pink);"></div>
+          Pemasukan
+        </div>
+        <div class="chart-legend-item">
+          <div class="chart-legend-dot" style="background:#e5e7eb;border:1px solid #d1d5db;"></div>
+          Pengeluaran
+        </div>
+      </div>
+      <div class="chart-bars">${barsHtml || '<span style="font-size:12px;color:var(--text-secondary);">Belum ada data tren.</span>'}</div>
+    </div>
+  `;
+}
+  
   function renderKeuanganPemasukan(bulanFilter) {
     let rows = allBookings.filter(b => {
       if (!bulanFilter) return true;
