@@ -2909,7 +2909,7 @@ if (booking.bukti) {
       <div class="edit-fields-row">
         <div class="edit-field">
           <label>Jumlah Orang</label>
-          <input type="time" id="ef_jam_selesai" value="${fmtTime(b.jam_selesai) !== '-' ? fmtTime(b.jam_selesai).replace('.', ':') : ''}">
+          <input type="number" id="ef_jumlah_orang" value="${b.jumlah_orang || ''}" min="1" placeholder="1">
         </div>
       </div>
       <div class="edit-fields-row">
@@ -3200,7 +3200,7 @@ if (booking.bukti) {
       email:           document.getElementById('ef_email').value.trim(),
       lokasi:          document.getElementById('ef_lokasi').value.trim(),
       tanggal:         document.getElementById('ef_tanggal').value,
-      jam_selesai: document.getElementById('ef_jam_selesai').value.replace(':', '.'),
+      jam_selesai: (document.getElementById('edit-jam_selesai').value,
       jumlah_orang:    document.getElementById('ef_jumlah_orang').value,
       paket:           document.getElementById('ef_paket').value.trim(),
       addon:           document.getElementById('ef_addon').value.trim(),
