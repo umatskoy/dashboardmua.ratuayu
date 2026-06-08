@@ -60,8 +60,6 @@
   min-width: 56px;
 }
 
-.sidebar.collapsed .sidebar-brand h1,
-.sidebar.collapsed .sidebar-brand .sidebar-badge,
 .sidebar.collapsed .sidebar-section-label,
 .sidebar.collapsed .sidebar-item span {
   display: none;
@@ -71,11 +69,22 @@
   justify-content: center;
   padding: 10px 0;
 }
-
 .sidebar.collapsed .sidebar-brand {
-  align-items: center;
   padding: 1rem 0;
+  align-items: center;
 }
+
+
+.sidebar.collapsed .sidebar-brand h1,
+.sidebar.collapsed .sidebar-brand .sidebar-badge {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-brand > div {
+  justify-content: center;
+  width: 100%;
+}
+
 
 .sidebar.collapsed + .main-area .topbar-menu-btn {
   display: flex;
@@ -223,7 +232,7 @@
     }
 
 .topbar-menu-btn {
-  display: flex;
+  display: none;
   background: transparent;
   border: none;
   font-size: 20px;
@@ -1771,10 +1780,24 @@
 
   <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand">
-    <h1>Dashboard Booking</h1>
-    <span class="sidebar-badge">MUA</span>
+ <div class="sidebar-brand">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+      <h1>Dashboard Booking</h1>
+      <span class="sidebar-badge">MUA</span>
+    </div>
+    <button onclick="toggleSidebar()" style="
+      background:transparent; border:none; cursor:pointer;
+      color:var(--text-secondary); font-size:18px;
+      padding:2px 4px; border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.18s; flex-shrink:0; margin-left:8px;
+    " onmouseover="this.style.background='var(--pink-light)';this.style.color='var(--pink)'"
+       onmouseout="this.style.background='transparent';this.style.color='var(--text-secondary)'">
+      <i class="ti ti-layout-sidebar-left-collapse" id="sidebarToggleIcon"></i>
+    </button>
   </div>
+</div>
   <nav class="sidebar-nav">
     <p class="sidebar-section-label">Menu</p>
     <button class="sidebar-item active" id="nav-dashboard" data-label="Dashboard" onclick="switchPage('dashboard')">
@@ -1813,9 +1836,9 @@
     <!-- Top bar -->
     <div class="topbar">
       <div class="topbar-left">
-        <button class="topbar-menu-btn" onclick="toggleSidebar()">
-          <i class="ti ti-menu-2"></i>
-        </button>
+        <button class="topbar-menu-btn" id="topbarMenuBtn" onclick="toggleSidebar()">
+  <i class="ti ti-menu-2"></i>
+</button>
         <span class="topbar-title" id="topbarTitle">Dashboard</span>
       </div>
       <div class="topbar-right">
@@ -3578,14 +3601,18 @@ if (blokirInfo) {
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebarOverlay');
+  const icon    = document.getElementById('sidebarToggleIcon');
 
   if (window.innerWidth <= 900) {
-    // Mobile: slide in/out dengan overlay
     const isOpen = sidebar.classList.toggle('open');
     overlay.classList.toggle('show', isOpen);
   } else {
-    // Desktop: collapse/expand
-    sidebar.classList.toggle('collapsed');
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    if (icon) {
+      icon.className = isCollapsed
+        ? 'ti ti-layout-sidebar-left-expand'
+        : 'ti ti-layout-sidebar-left-collapse';
+    }
   }
 }
 
@@ -3699,7 +3726,6 @@ function switchKeuanganTab(tab) {
 
   function renderKeuangan() {
   const bulanFilter = document.getElementById('filterKeuanganBulan').value;
-console.log('[Keuangan] activeTab:', keuanganActiveTab);
   if (keuanganActiveTab === 'ringkasan') {
     renderKeuanganRingkasan(bulanFilter);
   } else if (keuanganActiveTab === 'pengeluaran') {
@@ -3709,8 +3735,7 @@ console.log('[Keuangan] activeTab:', keuanganActiveTab);
   }
 }
 function renderKeuanganRingkasan(bulanFilter) {
-  console.log('[Ringkasan] dipanggil, allBookings:', allBookings.length, 'allPengeluaran:', allPengeluaran.length);
-  // ── Filter data ──
+  
   const filteredBookings = allBookings.filter(b => {
     if (!bulanFilter) return true;
     const d = parseDate(b.tanggal);
