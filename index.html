@@ -40,19 +40,46 @@
 
     /* ── SIDEBAR ── */
     .sidebar {
-      width: 240px;
-      min-width: 240px;
-      background: var(--bg);
-      border-right: 0.5px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-      z-index: 200;
-      transition: transform 0.3s ease;
-    }
+  width: 240px;
+  min-width: 240px;
+  background: var(--bg);
+  border-right: 0.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 200;
+  transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+
+.sidebar.collapsed .sidebar-brand h1,
+.sidebar.collapsed .sidebar-brand .sidebar-badge,
+.sidebar.collapsed .sidebar-section-label,
+.sidebar.collapsed .sidebar-item span {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-item {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar.collapsed .sidebar-brand {
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.sidebar.collapsed + .main-area .topbar-menu-btn {
+  display: flex;
+}
 
     .sidebar-brand {
       padding: 1.5rem 1.25rem 1.25rem;
@@ -103,22 +130,40 @@
     }
 
     .sidebar-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border: none;
-      background: transparent;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13.5px;
-      font-weight: 400;
-      color: var(--text-secondary);
-      cursor: pointer;
-      text-align: left;
-      width: 100%;
-      transition: all 0.18s;
-    }
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.18s;
+  position: relative;
+}
+
+/* Tooltip saat collapsed */
+.sidebar.collapsed .sidebar-item:hover::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 300;
+  pointer-events: none;
+}
 
     .sidebar-item i { font-size: 17px; flex-shrink: 0; }
 
@@ -177,15 +222,24 @@
       gap: 12px;
     }
 
-    .topbar-menu-btn {
-      display: none;
-      background: transparent;
-      border: none;
-      font-size: 20px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 4px;
-    }
+.topbar-menu-btn {
+  display: flex;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.18s;
+}
+
+.topbar-menu-btn:hover {
+  background: var(--pink-light);
+  color: var(--pink);
+}
 
     .topbar-title {
       font-size: 15px;
@@ -1716,42 +1770,42 @@
 <div class="app-layout">
 
   <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <h1>Dashboard Booking</h1>
-      <span class="sidebar-badge">MUA</span>
-    </div>
-    <nav class="sidebar-nav">
-      <p class="sidebar-section-label">Menu</p>
-      <button class="sidebar-item active" id="nav-dashboard" onclick="switchPage('dashboard')">
-        <i class="ti ti-layout-dashboard"></i>
-        <span>Dashboard</span>
-      </button>
-      <button class="sidebar-item" id="nav-daftar" onclick="switchPage('daftar')">
-        <i class="ti ti-list"></i>
-        <span>Daftar Booking</span>
-      </button>
-      <button class="sidebar-item" id="nav-kalender" onclick="switchPage('kalender')">
-        <i class="ti ti-calendar-event"></i>
-        <span>Kalender Ketersediaan</span>
-      </button>
-      <button class="sidebar-item" id="nav-kinerja" onclick="switchPage('kinerja')">
-        <i class="ti ti-chart-bar"></i>
-        <span>Kinerja Team</span>
-      </button>
-      <button class="sidebar-item" id="nav-keuangan" onclick="switchPage('keuangan')">
-        <i class="ti ti-report-money"></i>
-        <span>Keuangan</span>
-      </button>
-      <a class="sidebar-item" href="settings.html" target="_blank">
-        <i class="ti ti-settings"></i>
-        <span>Pengaturan</span>
-      </a>
-    </nav>
-    <button class="sidebar-toggle-mobile" id="sidebarClose" onclick="toggleSidebar()">
-      <i class="ti ti-x"></i>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <h1>Dashboard Booking</h1>
+    <span class="sidebar-badge">MUA</span>
+  </div>
+  <nav class="sidebar-nav">
+    <p class="sidebar-section-label">Menu</p>
+    <button class="sidebar-item active" id="nav-dashboard" data-label="Dashboard" onclick="switchPage('dashboard')">
+      <i class="ti ti-layout-dashboard"></i>
+      <span>Dashboard</span>
     </button>
-  </aside>
+    <button class="sidebar-item" id="nav-daftar" data-label="Daftar Booking" onclick="switchPage('daftar')">
+      <i class="ti ti-list"></i>
+      <span>Daftar Booking</span>
+    </button>
+    <button class="sidebar-item" id="nav-kalender" data-label="Kalender Ketersediaan" onclick="switchPage('kalender')">
+      <i class="ti ti-calendar-event"></i>
+      <span>Kalender Ketersediaan</span>
+    </button>
+    <button class="sidebar-item" id="nav-kinerja" data-label="Kinerja Team" onclick="switchPage('kinerja')">
+      <i class="ti ti-chart-bar"></i>
+      <span>Kinerja Team</span>
+    </button>
+    <button class="sidebar-item" id="nav-keuangan" data-label="Keuangan" onclick="switchPage('keuangan')">
+      <i class="ti ti-report-money"></i>
+      <span>Keuangan</span>
+    </button>
+    <a class="sidebar-item" data-label="Pengaturan" href="settings.html" target="_blank">
+      <i class="ti ti-settings"></i>
+      <span>Pengaturan</span>
+    </a>
+  </nav>
+  <button class="sidebar-toggle-mobile" id="sidebarClose" onclick="toggleSidebar()">
+    <i class="ti ti-x"></i>
+  </button>
+</aside>
 
   <!-- Main area -->
   <div class="main-area">
@@ -3521,12 +3575,19 @@ if (blokirInfo) {
     if (sidebar.classList.contains('open')) toggleSidebar();
   }
 
-  function toggleSidebar() {
-    const sidebar  = document.getElementById('sidebar');
-    const overlay  = document.getElementById('sidebarOverlay');
-    const isOpen   = sidebar.classList.toggle('open');
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  if (window.innerWidth <= 900) {
+    // Mobile: slide in/out dengan overlay
+    const isOpen = sidebar.classList.toggle('open');
     overlay.classList.toggle('show', isOpen);
+  } else {
+    // Desktop: collapse/expand
+    sidebar.classList.toggle('collapsed');
   }
+}
 
   /* ══════════════════════════════════════════════
      KINERJA TEAM
