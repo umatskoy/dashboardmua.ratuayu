@@ -2183,7 +2183,7 @@
       timestamp:       pick('timestamp'),
       nama:            pick('nama', 'name', 'Nama'),
       wa:              pick('wa', 'whatsapp', 'no_wa', 'nomor_wa', 'phone', 'WA'),
-      email:           pick('email', 'Email'),
+      instagram:       pick('instagram', 'Instagram'),
       lokasi:          pick('lokasi', 'location', 'Lokasi'),
       tanggal:         pick('tanggal', 'date', 'Tanggal', 'tgl'),
       jam_selesai:     (() => {
@@ -2622,8 +2622,8 @@ const statusText = status === 'dp'    ? 'DP'
           <span class="detail-value"><a href="https://wa.me/${booking.wa}" target="_blank" style="color:var(--pink); text-decoration:none;">${booking.wa || '-'}</a></span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Email</span>
-          <span class="detail-value">${booking.email || '-'}</span>
+          <span class="detail-label">Instagram</span>
+          <span class="detail-value">${booking.instagram || '-'}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Lokasi</span>
@@ -2802,7 +2802,7 @@ if (booking.bukti) {
     lines.push("👤 KLIEN");
     lines.push("Nama     : " + v(b.nama));
     lines.push("WA       : " + v(b.wa));
-    lines.push("Email    : " + v(b.email));
+    lines.push("Instagram: " + v(b.instagram));
     lines.push("Lokasi   : " + v(b.lokasi));
 
     lines.push("");
@@ -2886,8 +2886,8 @@ if (booking.bukti) {
           <input type="text" id="ef_wa" value="${b.wa || ''}" placeholder="628xxxxxxx">
         </div>
         <div class="edit-field">
-          <label>Email</label>
-          <input type="email" id="ef_email" value="${b.email || ''}" placeholder="email@example.com">
+          <label>Instagram</label>
+          <input type="instagram" id="ef_instagram" value="${b.instagram || ''}" placeholder="instagram@example.com">
         </div>
       </div>
       <div class="edit-field">
@@ -3197,7 +3197,7 @@ if (booking.bukti) {
       timestamp:       currentBooking.timestamp || '',
       nama:            document.getElementById('ef_nama').value.trim(),
       wa:              document.getElementById('ef_wa').value.trim(),
-      email:           document.getElementById('ef_email').value.trim(),
+      instagram:           document.getElementById('ef_instagram').value.trim(),
       lokasi:          document.getElementById('ef_lokasi').value.trim(),
       tanggal:         document.getElementById('ef_tanggal').value,
       jam_selesai:     document.getElementById('ef_jam_selesai').value.replace(':', '.'),
@@ -4246,7 +4246,7 @@ document.getElementById('keuanganSummary').innerHTML = `
     const infoRows = [
       ['Nama',      b.nama    || '-'],
       ['WhatsApp',  b.wa      || '-'],
-      ['Email',     b.email   || '-'],
+      ['Instagram',     b.instagram   || '-'],
       ['Lokasi',    b.lokasi  || '-'],
     ];
 
