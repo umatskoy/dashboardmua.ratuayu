@@ -3148,22 +3148,65 @@ if (booking.bukti) {
         <label>Paket</label>
         ${(() => {
           const savedPakets = getPaketList();
-          if (savedPakets.length === 0) {
-            return `<input type="text" id="ef_paket" value="${b.paket || ''}" placeholder="Nama paket (tambah di Pengaturan)">`;
-          }
           const currentVal = b.paket || '';
-          const matchedPaket = savedPakets.find(p => currentVal.startsWith(p.nama));
-          const options = savedPakets.map(p =>
-            `<option value="${p.nama}" ${matchedPaket && matchedPaket.nama === p.nama ? 'selected' : ''}>${p.nama} – Rp ${Number(p.harga).toLocaleString('id-ID')}</option>`
-          ).join('');
+
+          // Parse paket yang sudah ada (pisah dengan |)
+          const existingPakets = currentVal
+            ? currentVal.split('|').map(s => s.trim()).filter(Boolean)
+            : [''];
+
+          const renderPaketRow = (val, idx) => {
+            // Coba cocokkan nama paket dari val
+            const matchedNama = savedPakets.find(p => val.startsWith(p.nama));
+
+            if (savedPakets.length === 0) {
+              return `
+                <div class="paket-row" id="paket_row_${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+                  <input type="text" class="paket-input" data-idx="${idx}"
+                    value="${val}" placeholder="Nama paket"
+                    style="flex:1;" oninput="syncPaketRows()">
+                  <button type="button" onclick="removePaketRow(${idx})"
+                    style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
+                    title="Hapus">
+                    <i class="ti ti-x"></i>
+                  </button>
+                </div>`;
+            }
+
+            const options = savedPakets.map(p =>
+              `<option value="${p.nama}" ${matchedNama && matchedNama.nama === p.nama ? 'selected' : ''}>${p.nama} – Rp ${Number(p.harga).toLocaleString('id-ID')}</option>`
+            ).join('');
+
+            return `
+              <div class="paket-row" id="paket_row_${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+                <select class="paket-select" data-idx="${idx}" onchange="onPaketSelectChange(${idx})"
+                  style="flex:1;">
+                  <option value="">-- Pilih Paket --</option>
+                  ${options}
+                  <option value="__manual__" ${!matchedNama && val ? 'selected' : ''}>Ketik manual...</option>
+                </select>
+                <button type="button" onclick="removePaketRow(${idx})"
+                  style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
+                  title="Hapus">
+                  <i class="ti ti-x"></i>
+                </button>
+              </div>
+              <input type="text" class="paket-manual" data-idx="${idx}"
+                value="${!matchedNama && val ? val : ''}"
+                placeholder="Nama paket manual"
+                style="display:${!matchedNama && val ? 'block' : 'none'};margin-bottom:6px;width:calc(100% - 36px);"
+                oninput="syncPaketRows()">`;
+          };
+
+          const rowsHtml = existingPakets.map((val, idx) => renderPaketRow(val, idx)).join('');
+
           return `
-            <select id="ef_paket_select" onchange="syncPaketField()" style="margin-bottom:6px;">
-              <option value="">-- Pilih Paket --</option>
-              ${options}
-              <option value="__manual__" ${!matchedPaket && currentVal ? 'selected' : ''}>Ketik manual...</option>
-            </select>
-            <input type="text" id="ef_paket" value="${currentVal}" placeholder="Nama paket"
-              style="display:${!matchedPaket && currentVal ? 'block' : (matchedPaket ? 'none' : 'none')};">`;
+            <div id="ef_paket_rows">${rowsHtml}</div>
+            <input type="hidden" id="ef_paket" value="${currentVal}">
+            <button type="button" onclick="addPaketRow()"
+              style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px dashed var(--pink);background:var(--pink-light);color:var(--pink);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:2px;">
+              <i class="ti ti-plus" style="font-size:13px;"></i> Tambah Paket Lain
+            </button>`;
         })()}
       </div>
       <div class="edit-field">
@@ -4670,22 +4713,112 @@ document.getElementById('keuanganSummary').innerHTML = `
     btn.disabled = sel.value === '';
   }
 
-  function syncPaketField() {
-    const sel   = document.getElementById('ef_paket_select');
-    const input = document.getElementById('ef_paket');
-    if (!sel || !input) return;
+function syncPaketField() {
+    syncPaketRows();
+  }
+
+  function onPaketSelectChange(idx) {
+    const sel    = document.querySelector(`.paket-select[data-idx="${idx}"]`);
+    const manual = document.querySelector(`.paket-manual[data-idx="${idx}"]`);
+    if (!sel) return;
     if (sel.value === '__manual__') {
-      input.style.display = 'block';
-      input.value = '';
-      input.focus();
-    } else if (sel.value === '') {
-      input.style.display = 'none';
-      input.value = '';
+      if (manual) { manual.style.display = 'block'; manual.value = ''; manual.focus(); }
     } else {
-      input.style.display = 'none';
-      input.value = sel.value;
+      if (manual) { manual.style.display = 'none'; manual.value = ''; }
     }
-    hitungSubtotal(); // ← TAMBAH INI
+    syncPaketRows();
+  }
+
+  function syncPaketRows() {
+    const hidden = document.getElementById('ef_paket');
+    if (!hidden) return;
+
+    const parts = [];
+
+    // Dari select + manual
+    document.querySelectorAll('#ef_paket_rows .paket-row').forEach(row => {
+      const idx    = row.dataset ? row.id.replace('paket_row_', '') : '';
+      const sel    = row.querySelector('.paket-select');
+      const manual = document.querySelector(`.paket-manual[data-idx="${idx}"]`);
+      const input  = row.querySelector('.paket-input'); // fallback jika tidak ada savedPakets
+
+      let val = '';
+      if (input) {
+        val = input.value.trim();
+      } else if (sel) {
+        if (sel.value === '__manual__') {
+          val = manual ? manual.value.trim() : '';
+        } else if (sel.value) {
+          // Cari harga dari allPakets
+          const paketData = allPakets.find(p => p.nama === sel.value);
+          if (paketData) {
+            val = `${paketData.nama} – Rp ${Number(paketData.harga).toLocaleString('id-ID')} x1 orang`;
+          } else {
+            val = sel.value;
+          }
+        }
+      }
+
+      if (val) parts.push(val);
+    });
+
+    hidden.value = parts.join(' | ');
+    hitungSubtotal();
+  }
+
+  function addPaketRow() {
+    const container = document.getElementById('ef_paket_rows');
+    if (!container) return;
+    const idx = Date.now(); // unique id
+    const savedPakets = getPaketList();
+
+    let html = `<div class="paket-row" id="paket_row_${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">`;
+
+    if (savedPakets.length === 0) {
+      html += `<input type="text" class="paket-input" data-idx="${idx}"
+        value="" placeholder="Nama paket"
+        style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+        oninput="syncPaketRows()">`;
+    } else {
+      const options = savedPakets.map(p =>
+        `<option value="${p.nama}">${p.nama} – Rp ${Number(p.harga).toLocaleString('id-ID')}</option>`
+      ).join('');
+      html += `
+        <select class="paket-select" data-idx="${idx}" onchange="onPaketSelectChange(${idx})"
+          style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;">
+          <option value="">-- Pilih Paket --</option>
+          ${options}
+          <option value="__manual__">Ketik manual...</option>
+        </select>`;
+    }
+
+    html += `
+      <button type="button" onclick="removePaketRow(${idx})"
+        style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
+        title="Hapus">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>`;
+
+    if (savedPakets.length > 0) {
+      html += `<input type="text" class="paket-manual" data-idx="${idx}"
+        value="" placeholder="Nama paket manual"
+        style="display:none;margin-bottom:6px;width:calc(100% - 36px);padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+        oninput="syncPaketRows()">`;
+    }
+
+    container.insertAdjacentHTML('beforeend', html);
+  }
+
+  function removePaketRow(idx) {
+    const row    = document.getElementById('paket_row_' + idx);
+    const manual = document.querySelector(`.paket-manual[data-idx="${idx}"]`);
+    // Jangan hapus kalau hanya tersisa 1 row
+    const allRows = document.querySelectorAll('#ef_paket_rows .paket-row');
+    if (allRows.length <= 1) return;
+    if (row)    row.remove();
+    if (manual) manual.remove();
+    syncPaketRows();
   }
 
   function syncAddonField() {
@@ -4716,14 +4849,29 @@ document.getElementById('keuanganSummary').innerHTML = `
 function hitungSubtotal() {
   let hargaPaket = 0;
   let namaPaket = '—';
-  const paketSel = document.getElementById('ef_paket_select');
-  if (paketSel && paketSel.value && paketSel.value !== '__manual__') {
-    const paketData = allPakets.find(p => p.nama === paketSel.value);
-    if (paketData) {
-      hargaPaket = Number(paketData.harga) || 0;
-      namaPaket  = paketData.nama;
+
+  // Hitung dari multi-row paket
+  const paketSelects = document.querySelectorAll('#ef_paket_rows .paket-select');
+  const paketInputs  = document.querySelectorAll('#ef_paket_rows .paket-input');
+  const namaPaketParts = [];
+
+  paketSelects.forEach(sel => {
+    if (sel.value && sel.value !== '__manual__') {
+      const paketData = allPakets.find(p => p.nama === sel.value);
+      if (paketData) {
+        hargaPaket += Number(paketData.harga) || 0;
+        namaPaketParts.push(paketData.nama);
+      }
     }
-  }
+  });
+  paketInputs.forEach(inp => {
+    if (inp.value.trim()) namaPaketParts.push(inp.value.trim());
+  });
+
+  namaPaket = namaPaketParts.length ? namaPaketParts.join(' + ') : '—';
+
+  // Jangan override subtotal kalau tidak ada paket dipilih dari dropdown
+  const adaSatupunPaketDipilih = namaPaketParts.length > 0;
 
   let hargaAddon = 0;
   let namaAddonParts = [];
@@ -4748,7 +4896,7 @@ function hitungSubtotal() {
   const hargaTransport = transportInput ? parseRp(transportInput.value) : 0;
 
   // Update subtotal field
-  if (!paketSel || !paketSel.value || paketSel.value === '__manual__') {
+  if (!adaSatupunPaketDipilih) {
     updateRingkasan(null, hargaAddon, hargaTransport, namaPaket, namaAddonParts);
     return;
   }
