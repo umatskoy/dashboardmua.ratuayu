@@ -3141,7 +3141,7 @@ if (booking.bukti) {
       </div>
       <div class="edit-field">
         <label>Transport / Biaya Transport</label>
-        <input type="text" id="ef_transport" value="${b.transport_biaya || ''}" placeholder="Misal: Rp 50.000">
+       <input type="text" id="ef_transport" value="${b.transport_biaya || ''}" placeholder="Misal: Rp 50.000" oninput="hitungSubtotal()">
       </div>
      <div class="edit-fields-row">
         <div class="edit-field">
@@ -4586,6 +4586,7 @@ document.getElementById('keuanganSummary').innerHTML = `
       input.style.display = 'none';
       input.value = sel.value;
     }
+    hitungSubtotal(); // ← TAMBAH INI
   }
 
   function syncAddonField() {
@@ -4611,8 +4612,45 @@ document.getElementById('keuanganSummary').innerHTML = `
     const manual = document.getElementById('ef_addon_manual');
     if (manual && manual.value.trim()) parts.push(manual.value.trim());
     hidden.value = parts.join(', ');
+    hitungSubtotal(); // ← TAMBAH INI
+  }
+function hitungSubtotal() {
+  // Hitung harga paket dari dropdown
+  let hargaPaket = 0;
+  const paketSel = document.getElementById('ef_paket_select');
+  if (paketSel && paketSel.value && paketSel.value !== '__manual__') {
+    const paketData = allPakets.find(p => p.nama === paketSel.value);
+    if (paketData) hargaPaket = Number(paketData.harga) || 0;
   }
 
+  // Hitung total addon dari checkbox yang tercentang
+  let hargaAddon = 0;
+  const MULTI_ADDONS = ['hairdo','hijabstylist','hijabstylist+drappery','softlens minus','softlens non-minus'];
+  const isMulti = (nama) => MULTI_ADDONS.some(m => nama.trim().toLowerCase() === m);
+  const checks = document.querySelectorAll('#ef_addon_checks input[type=checkbox]:checked');
+  checks.forEach(c => {
+    const harga = Number(c.dataset.harga) || 0;
+    if (isMulti(c.value)) {
+      const addonId = 'addon_' + c.value.replace(/\W/g,'_');
+      const qtyEl   = document.getElementById('qty_' + addonId);
+      const qty     = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+      hargaAddon += harga * qty;
+    } else {
+      hargaAddon += harga;
+    }
+  });
+
+  // Hitung transport
+  const transportInput = document.getElementById('ef_transport');
+  const hargaTransport = transportInput ? parseRp(transportInput.value) : 0;
+
+  // Kalau paket tidak dipilih dari dropdown (manual), jangan override subtotal
+  if (!paketSel || !paketSel.value || paketSel.value === '__manual__') return;
+
+  const total = hargaPaket + hargaAddon + hargaTransport;
+  const subtotalInput = document.getElementById('ef_subtotal');
+  if (subtotalInput) subtotalInput.value = total;
+}
   function onAddonChange(addonId) {
     const cb      = document.getElementById(addonId);
     const stepper = document.getElementById('stepper_' + addonId);
