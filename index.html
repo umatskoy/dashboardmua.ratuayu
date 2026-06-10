@@ -2219,6 +2219,10 @@
       mua_bertugas_5:  pick('mua_bertugas_5', 'mua bertugas 5', 'MUA Bertugas 5', 'mua5'),
       hijab_stylist:   pick('hijab_stylist', 'hijab stylist', 'Hijab Stylist', 'hijab'),
       hair_stylist:    pick('hair_stylist', 'hair stylist', 'Hair Stylist', 'hair'),
+      hijab_stylist2:  pick('hijab_stylist2', 'hijab stylist2', 'Hijab Stylist 2', 'hijab2'),
+      hair_stylist2:   pick('hair_stylist2', 'hair stylist2', 'Hair Stylist 2', 'hair2'),
+      hijab_stylist3:  pick('hijab_stylist3', 'hijab stylist3', 'Hijab Stylist 3', 'hijab3'),
+      hair_stylist3:   pick('hair_stylist3', 'hair stylist3', 'Hair Stylist 3', 'hair3'),
       notes:           pick('notes', 'Notes', 'catatan', 'Catatan', 'note'),
       // simpan semua field asli juga, untuk jaga-jaga
       _raw: raw,
@@ -2682,7 +2686,7 @@ const statusText = status === 'dp'    ? 'DP'
             : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
           }</span>
         </div>
-        <div class="detail-row">
+     <div class="detail-row">
           <span class="detail-label">Hijab Stylist</span>
           <span class="detail-value">${booking.hijab_stylist
             ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#16a34a;border:0.5px solid rgba(22,163,74,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hijab_stylist}</span>`
@@ -2690,10 +2694,38 @@ const statusText = status === 'dp'    ? 'DP'
           }</span>
         </div>
         <div class="detail-row">
+          <span class="detail-label">Hijab Stylist 2</span>
+          <span class="detail-value">${booking.hijab_stylist2
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#16a34a;border:0.5px solid rgba(22,163,74,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hijab_stylist2}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Hijab Stylist 3</span>
+          <span class="detail-value">${booking.hijab_stylist3
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#16a34a;border:0.5px solid rgba(22,163,74,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hijab_stylist3}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
           <span class="detail-label">Hair Stylist</span>
           <span class="detail-value">${booking.hair_stylist
             ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hair_stylist}</span>`
             : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">Belum ditentukan</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Hair Stylist 2</span>
+          <span class="detail-value">${booking.hair_stylist2
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hair_stylist2}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
+          }</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Hair Stylist 3</span>
+          <span class="detail-value">${booking.hair_stylist3
+            ? `<span style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">${booking.hair_stylist3}</span>`
+            : '<span style="color:var(--text-secondary);font-style:italic;font-size:12px;">—</span>'
           }</span>
         </div>
       </div>
@@ -2816,7 +2848,11 @@ if (booking.bukti) {
     lines.push("MUA Bertugas 4 : " + v(b.mua_bertugas_4));
     lines.push("MUA Bertugas 5 : " + v(b.mua_bertugas_5));
     lines.push("Hijab Stylist  : " + v(b.hijab_stylist));
+    lines.push("Hijab Stylist 2: " + v(b.hijab_stylist2));
+    lines.push("Hijab Stylist 3: " + v(b.hijab_stylist3));
     lines.push("Hair Stylist   : " + v(b.hair_stylist));
+    lines.push("Hair Stylist 2 : " + v(b.hair_stylist2));
+    lines.push("Hair Stylist 3 : " + v(b.hair_stylist3));
 
     lines.push("");
     lines.push("💄 LAYANAN");
@@ -3107,28 +3143,118 @@ if (booking.bukti) {
         <label>Transport / Biaya Transport</label>
         <input type="text" id="ef_transport" value="${b.transport_biaya || ''}" placeholder="Misal: Rp 50.000">
       </div>
-      <div class="edit-fields-row">
+     <div class="edit-fields-row">
         <div class="edit-field">
           <label>Hijab Stylist Bertugas</label>
-          <select id="ef_hijab_stylist">
-            <option value="">— Pilih Hijab Stylist —</option>
-            ${allTeam.filter(t => t.role === 'Hijab Stylist').map(t =>
-              `<option value="${t.nama}" ${b.hijab_stylist === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'Hijab Stylist').find(t => t.nama === b.hijab_stylist) && b.hijab_stylist
-              ? `<option value="${b.hijab_stylist}" selected>${b.hijab_stylist}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_hijab_stylist" onchange="updateClearBtn('ef_hijab_stylist')">
+              <option value="">— Pilih Hijab Stylist —</option>
+              ${allTeam.filter(t => t.role === 'Hijab Stylist').map(t =>
+                `<option value="${t.nama}" ${b.hijab_stylist === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'Hijab Stylist').find(t => t.nama === b.hijab_stylist) && b.hijab_stylist
+                ? `<option value="${b.hijab_stylist}" selected>${b.hijab_stylist}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_hijab_stylist"
+              onclick="clearMuaField('ef_hijab_stylist')" title="Kosongkan"
+              ${!b.hijab_stylist ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
         <div class="edit-field">
           <label>Hair Stylist Bertugas</label>
-          <select id="ef_hair_stylist">
-            <option value="">— Pilih Hair Stylist —</option>
-            ${allTeam.filter(t => t.role === 'Hair Stylist').map(t =>
-              `<option value="${t.nama}" ${b.hair_stylist === t.nama ? 'selected' : ''}>${t.nama}</option>`
-            ).join('')}
-            ${!allTeam.filter(t => t.role === 'Hair Stylist').find(t => t.nama === b.hair_stylist) && b.hair_stylist
-              ? `<option value="${b.hair_stylist}" selected>${b.hair_stylist}</option>` : ''}
-          </select>
+          <div class="mua-select-wrapper">
+            <select id="ef_hair_stylist" onchange="updateClearBtn('ef_hair_stylist')">
+              <option value="">— Pilih Hair Stylist —</option>
+              ${allTeam.filter(t => t.role === 'Hair Stylist').map(t =>
+                `<option value="${t.nama}" ${b.hair_stylist === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'Hair Stylist').find(t => t.nama === b.hair_stylist) && b.hair_stylist
+                ? `<option value="${b.hair_stylist}" selected>${b.hair_stylist}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_hair_stylist"
+              onclick="clearMuaField('ef_hair_stylist')" title="Kosongkan"
+              ${!b.hair_stylist ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="edit-fields-row">
+        <div class="edit-field">
+          <label>Hijab Stylist 2 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <div class="mua-select-wrapper">
+            <select id="ef_hijab_stylist2" onchange="updateClearBtn('ef_hijab_stylist2')">
+              <option value="">— Pilih Hijab Stylist 2 —</option>
+              ${allTeam.filter(t => t.role === 'Hijab Stylist').map(t =>
+                `<option value="${t.nama}" ${b.hijab_stylist2 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'Hijab Stylist').find(t => t.nama === b.hijab_stylist2) && b.hijab_stylist2
+                ? `<option value="${b.hijab_stylist2}" selected>${b.hijab_stylist2}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_hijab_stylist2"
+              onclick="clearMuaField('ef_hijab_stylist2')" title="Kosongkan"
+              ${!b.hijab_stylist2 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="edit-field">
+          <label>Hair Stylist 2 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <div class="mua-select-wrapper">
+            <select id="ef_hair_stylist2" onchange="updateClearBtn('ef_hair_stylist2')">
+              <option value="">— Pilih Hair Stylist 2 —</option>
+              ${allTeam.filter(t => t.role === 'Hair Stylist').map(t =>
+                `<option value="${t.nama}" ${b.hair_stylist2 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'Hair Stylist').find(t => t.nama === b.hair_stylist2) && b.hair_stylist2
+                ? `<option value="${b.hair_stylist2}" selected>${b.hair_stylist2}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_hair_stylist2"
+              onclick="clearMuaField('ef_hair_stylist2')" title="Kosongkan"
+              ${!b.hair_stylist2 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="edit-fields-row">
+        <div class="edit-field">
+          <label>Hijab Stylist 3 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <div class="mua-select-wrapper">
+            <select id="ef_hijab_stylist3" onchange="updateClearBtn('ef_hijab_stylist3')">
+              <option value="">— Pilih Hijab Stylist 3 —</option>
+              ${allTeam.filter(t => t.role === 'Hijab Stylist').map(t =>
+                `<option value="${t.nama}" ${b.hijab_stylist3 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'Hijab Stylist').find(t => t.nama === b.hijab_stylist3) && b.hijab_stylist3
+                ? `<option value="${b.hijab_stylist3}" selected>${b.hijab_stylist3}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_hijab_stylist3"
+              onclick="clearMuaField('ef_hijab_stylist3')" title="Kosongkan"
+              ${!b.hijab_stylist3 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="edit-field">
+          <label>Hair Stylist 3 <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+          <div class="mua-select-wrapper">
+            <select id="ef_hair_stylist3" onchange="updateClearBtn('ef_hair_stylist3')">
+              <option value="">— Pilih Hair Stylist 3 —</option>
+              ${allTeam.filter(t => t.role === 'Hair Stylist').map(t =>
+                `<option value="${t.nama}" ${b.hair_stylist3 === t.nama ? 'selected' : ''}>${t.nama}</option>`
+              ).join('')}
+              ${!allTeam.filter(t => t.role === 'Hair Stylist').find(t => t.nama === b.hair_stylist3) && b.hair_stylist3
+                ? `<option value="${b.hair_stylist3}" selected>${b.hair_stylist3}</option>` : ''}
+            </select>
+            <button type="button" class="btn-clear-mua" id="clear_ef_hair_stylist3"
+              onclick="clearMuaField('ef_hair_stylist3')" title="Kosongkan"
+              ${!b.hair_stylist3 ? 'disabled' : ''}>
+              <i class="ti ti-x"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3216,6 +3342,10 @@ if (booking.bukti) {
       mua_bertugas_5:  document.getElementById('ef_mua_bertugas_5').value,
       hijab_stylist:   document.getElementById('ef_hijab_stylist').value.trim(),
       hair_stylist:    document.getElementById('ef_hair_stylist').value.trim(),
+      hijab_stylist2:  document.getElementById('ef_hijab_stylist2').value.trim(),
+      hair_stylist2:   document.getElementById('ef_hair_stylist2').value.trim(),
+      hijab_stylist3:  document.getElementById('ef_hijab_stylist3').value.trim(),
+      hair_stylist3:   document.getElementById('ef_hair_stylist3').value.trim(),
       notes:           document.getElementById('ef_notes').value.trim(),
     };
 
