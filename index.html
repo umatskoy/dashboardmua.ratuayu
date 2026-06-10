@@ -4783,34 +4783,6 @@ function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAd
   }
 }
 
-  // Hitung total addon dari checkbox yang tercentang
-  let hargaAddon = 0;
-  const MULTI_ADDONS = ['hairdo','hijabstylist','hijabstylist+drappery','softlens minus','softlens non-minus'];
-  const isMulti = (nama) => MULTI_ADDONS.some(m => nama.trim().toLowerCase() === m);
-  const checks = document.querySelectorAll('#ef_addon_checks input[type=checkbox]:checked');
-  checks.forEach(c => {
-    const harga = Number(c.dataset.harga) || 0;
-    if (isMulti(c.value)) {
-      const addonId = 'addon_' + c.value.replace(/\W/g,'_');
-      const qtyEl   = document.getElementById('qty_' + addonId);
-      const qty     = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
-      hargaAddon += harga * qty;
-    } else {
-      hargaAddon += harga;
-    }
-  });
-
-  // Hitung transport
-  const transportInput = document.getElementById('ef_transport');
-  const hargaTransport = transportInput ? parseRp(transportInput.value) : 0;
-
-  // Kalau paket tidak dipilih dari dropdown (manual), jangan override subtotal
-  if (!paketSel || !paketSel.value || paketSel.value === '__manual__') return;
-
-  const total = hargaPaket + hargaAddon + hargaTransport;
-  const subtotalInput = document.getElementById('ef_subtotal');
-  if (subtotalInput) subtotalInput.value = total;
-}
   function onAddonChange(addonId) {
     const cb      = document.getElementById(addonId);
     const stepper = document.getElementById('stepper_' + addonId);
