@@ -1777,6 +1777,67 @@
       .btn-detail { padding: 5px 8px; font-size: 10px; }
       table { font-size: 12px; }
     }
+/* ── RINGKASAN TOTAL (Edit Modal) ── */
+.edit-ringkasan {
+  padding: 12px 1.5rem;
+  border-top: 0.5px solid var(--border);
+  background: var(--bg-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-ringkasan-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pink);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.edit-ringkasan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.edit-ringkasan-label {
+  color: var(--text-secondary);
+}
+
+.edit-ringkasan-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.edit-ringkasan-sisa {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--border);
+  margin-top: 2px;
+}
+
+.edit-ringkasan-sisa-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.edit-ringkasan-sisa-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pink);
+}
+    
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -2071,12 +2132,49 @@
     <div class="edit-modal-body" id="editModalBody">
       <!-- Form dinamis -->
     </div>
-    <div class="edit-modal-footer">
-      <button class="btn-cancel-edit" onclick="closeEditModal()">Batal</button>
-      <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit()">
-        <i class="ti ti-device-floppy" style="font-size:13px;"></i>
-        <span id="btnSaveText">Simpan</span>
-      </button>
+    <div class="edit-modal-footer" style="flex-direction:column;gap:0;padding:0;">
+      <!-- Ringkasan Total -->
+      <div class="edit-ringkasan" id="editRingkasan">
+        <div class="edit-ringkasan-title">
+          <i class="ti ti-receipt" style="font-size:12px;"></i> Ringkasan Total
+        </div>
+        <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">Paket</span>
+          <span class="edit-ringkasan-value" id="er_paket">—</span>
+        </div>
+        <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">Add On</span>
+          <span class="edit-ringkasan-value" id="er_addon">—</span>
+        </div>
+        <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">Transport</span>
+          <span class="edit-ringkasan-value" id="er_transport">—</span>
+        </div>
+        <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">Subtotal</span>
+          <span class="edit-ringkasan-value" id="er_subtotal" style="color:var(--pink);">—</span>
+        </div>
+        <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">DP</span>
+          <span class="edit-ringkasan-value" id="er_dp">—</span>
+        </div>
+        <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">DP ke-2</span>
+          <span class="edit-ringkasan-value" id="er_dp2">—</span>
+        </div>
+        <div class="edit-ringkasan-sisa">
+          <span class="edit-ringkasan-sisa-label">Sisa Pembayaran</span>
+          <span class="edit-ringkasan-sisa-value" id="er_sisa">—</span>
+        </div>
+      </div>
+      <!-- Tombol -->
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding:1rem 1.5rem;">
+        <button class="btn-cancel-edit" onclick="closeEditModal()">Batal</button>
+        <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit()">
+          <i class="ti ti-device-floppy" style="font-size:13px;"></i>
+          <span id="btnSaveText">Simpan</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -3261,18 +3359,18 @@ if (booking.bukti) {
       <div class="edit-section-title"><i class="ti ti-cash"></i> Pembayaran</div>
       <div class="edit-fields-row">
         <div class="edit-field">
-          <label>Subtotal (Rp)</label>
-          <input type="number" id="ef_subtotal" value="${parseRp(b.subtotal) || ''}" placeholder="0">
+          <label>Subtotal (Rp) <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">— dihitung otomatis</span></label>
+          <input type="number" id="ef_subtotal" value="${parseRp(b.subtotal) || ''}" placeholder="0"
+            readonly style="background:var(--bg-soft);color:var(--text-secondary);cursor:not-allowed;">
         </div>
         <div class="edit-field">
           <label>DP (Rp)</label>
-          <input type="number" id="ef_dp" value="${parseRp(b.dp) || ''}" placeholder="0">
-        </div>
+          <input type="number" id="ef_dp" value="${parseRp(b.dp) || ''}" placeholder="0" oninput="updateRingkasan(parseRp(document.getElementById('ef_subtotal').value), 0, 0, '', [])">
       </div>
       <div class="edit-fields-row">
         <div class="edit-field">
           <label>DP ke-2 (Rp) <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <input type="number" id="ef_dp2" value="${parseRp(b.dp2) || ''}" placeholder="0">
+          <input type="number" id="ef_dp2" value="${parseRp(b.dp2) || ''}" placeholder="0" oninput="updateRingkasan(parseRp(document.getElementById('ef_subtotal').value), 0, 0, '', [])">
         </div>
       </div>
       <div class="edit-field">
@@ -3299,7 +3397,7 @@ if (booking.bukti) {
           style="resize:vertical;min-height:90px;">${(b.notes || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
       </div>
     `;
-
+ setTimeout(() => hitungSubtotal(), 50);
     document.getElementById('editModalOverlay').classList.add('show');
   }
 
@@ -4615,13 +4713,74 @@ document.getElementById('keuanganSummary').innerHTML = `
     hitungSubtotal(); // ← TAMBAH INI
   }
 function hitungSubtotal() {
-  // Hitung harga paket dari dropdown
   let hargaPaket = 0;
+  let namaPaket = '—';
   const paketSel = document.getElementById('ef_paket_select');
   if (paketSel && paketSel.value && paketSel.value !== '__manual__') {
     const paketData = allPakets.find(p => p.nama === paketSel.value);
-    if (paketData) hargaPaket = Number(paketData.harga) || 0;
+    if (paketData) {
+      hargaPaket = Number(paketData.harga) || 0;
+      namaPaket  = paketData.nama;
+    }
   }
+
+  let hargaAddon = 0;
+  let namaAddonParts = [];
+  const MULTI_ADDONS = ['hairdo','hijabstylist','hijabstylist+drappery','softlens minus','softlens non-minus'];
+  const isMulti = (nama) => MULTI_ADDONS.some(m => nama.trim().toLowerCase() === m);
+  const checks = document.querySelectorAll('#ef_addon_checks input[type=checkbox]:checked');
+  checks.forEach(c => {
+    const harga = Number(c.dataset.harga) || 0;
+    if (isMulti(c.value)) {
+      const addonId = 'addon_' + c.value.replace(/\W/g,'_');
+      const qtyEl   = document.getElementById('qty_' + addonId);
+      const qty     = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+      hargaAddon += harga * qty;
+      namaAddonParts.push(c.value + (qty > 1 ? ' x' + qty : ''));
+    } else {
+      hargaAddon += harga;
+      namaAddonParts.push(c.value);
+    }
+  });
+
+  const transportInput = document.getElementById('ef_transport');
+  const hargaTransport = transportInput ? parseRp(transportInput.value) : 0;
+
+  // Update subtotal field
+  if (!paketSel || !paketSel.value || paketSel.value === '__manual__') {
+    updateRingkasan(null, hargaAddon, hargaTransport, namaPaket, namaAddonParts);
+    return;
+  }
+
+  const total = hargaPaket + hargaAddon + hargaTransport;
+  const subtotalInput = document.getElementById('ef_subtotal');
+  if (subtotalInput) subtotalInput.value = total;
+
+  updateRingkasan(total, hargaAddon, hargaTransport, namaPaket, namaAddonParts);
+}
+
+function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAddonParts) {
+  const dpInput  = document.getElementById('ef_dp');
+  const dp2Input = document.getElementById('ef_dp2');
+  const dp  = dpInput  ? parseRp(dpInput.value)  : 0;
+  const dp2 = dp2Input ? parseRp(dp2Input.value) : 0;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  set('er_paket',    namaPaket || '—');
+  set('er_addon',    namaAddonParts && namaAddonParts.length ? namaAddonParts.join(', ') : '—');
+  set('er_transport', hargaTransport > 0 ? fmtRp(hargaTransport) : '—');
+  set('er_subtotal',  subtotal !== null ? fmtRp(subtotal) : '—');
+  set('er_dp',        dp  > 0 ? fmtRp(dp)  : '—');
+  set('er_dp2',       dp2 > 0 ? fmtRp(dp2) : '—');
+
+  const sisa = subtotal !== null ? Math.max(0, subtotal - dp - dp2) : null;
+  const sisaEl = document.getElementById('er_sisa');
+  if (sisaEl) {
+    sisaEl.textContent  = sisa !== null ? fmtRp(sisa) : '—';
+    sisaEl.style.color  = (sisa === 0) ? '#2d5a0a' : 'var(--pink)';
+  }
+}
 
   // Hitung total addon dari checkbox yang tercentang
   let hargaAddon = 0;
