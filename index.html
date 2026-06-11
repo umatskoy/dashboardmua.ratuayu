@@ -4289,7 +4289,7 @@ document.getElementById('keuanganSummary').innerHTML = `
       const total  = parseRp(b.subtotal);
       const dp     = parseRp(b.dp);
       const dp2    = parseRp(b.dp2);
-      const sisa   = Math.max(0, total - dp);
+      const sisa   = Math.max(0, total - dp - dp2);
       const status = b.status || 'pending';
 
       let tglOrder = '—';
