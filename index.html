@@ -3155,21 +3155,41 @@ if (booking.bukti) {
             ? currentVal.split('|').map(s => s.trim()).filter(Boolean)
             : [''];
 
+          const parseJumlahOrang = (val) => {
+            const m = val.match(/x(\d+)\s*orang/i);
+            return m ? parseInt(m[1]) : 1;
+          };
+
           const renderPaketRow = (val, idx) => {
-            // Coba cocokkan nama paket dari val
             const matchedNama = savedPakets.find(p => val.startsWith(p.nama));
+            const jumlah = parseJumlahOrang(val);
+
+            const stepperHtml = `
+              <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                <button type="button" onclick="paketJumlahChange(${idx}, -1)"
+                  style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">−</button>
+                <span id="paket_qty_${idx}" data-qty="${jumlah}"
+                  style="min-width:24px;text-align:center;font-weight:600;font-size:13px;">${jumlah}</span>
+                <button type="button" onclick="paketJumlahChange(${idx}, 1)"
+                  style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">+</button>
+              </div>`;
+
+            const removeBtn = `
+              <button type="button" onclick="removePaketRow(${idx})"
+                style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
+                title="Hapus">
+                <i class="ti ti-x"></i>
+              </button>`;
 
             if (savedPakets.length === 0) {
               return `
                 <div class="paket-row" id="paket_row_${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
                   <input type="text" class="paket-input" data-idx="${idx}"
                     value="${val}" placeholder="Nama paket"
-                    style="flex:1;" oninput="syncPaketRows()">
-                  <button type="button" onclick="removePaketRow(${idx})"
-                    style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
-                    title="Hapus">
-                    <i class="ti ti-x"></i>
-                  </button>
+                    style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+                    oninput="syncPaketRows()">
+                  ${stepperHtml}
+                  ${removeBtn}
                 </div>`;
             }
 
@@ -3180,24 +3200,20 @@ if (booking.bukti) {
             return `
               <div class="paket-row" id="paket_row_${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
                 <select class="paket-select" data-idx="${idx}" onchange="onPaketSelectChange(${idx})"
-                  style="flex:1;">
+                  style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;">
                   <option value="">-- Pilih Paket --</option>
                   ${options}
                   <option value="__manual__" ${!matchedNama && val ? 'selected' : ''}>Ketik manual...</option>
                 </select>
-                <button type="button" onclick="removePaketRow(${idx})"
-                  style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
-                  title="Hapus">
-                  <i class="ti ti-x"></i>
-                </button>
+                ${stepperHtml}
+                ${removeBtn}
               </div>
               <input type="text" class="paket-manual" data-idx="${idx}"
                 value="${!matchedNama && val ? val : ''}"
                 placeholder="Nama paket manual"
-                style="display:${!matchedNama && val ? 'block' : 'none'};margin-bottom:6px;width:calc(100% - 36px);"
+                style="display:${!matchedNama && val ? 'block' : 'none'};margin-bottom:6px;width:calc(100% - 72px);padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
                 oninput="syncPaketRows()">`;
           };
-
           const rowsHtml = existingPakets.map((val, idx) => renderPaketRow(val, idx)).join('');
 
           return `
@@ -4735,26 +4751,26 @@ function syncPaketField() {
 
     const parts = [];
 
-    // Dari select + manual
     document.querySelectorAll('#ef_paket_rows .paket-row').forEach(row => {
-      const idx    = row.dataset ? row.id.replace('paket_row_', '') : '';
+      const idx    = row.id.replace('paket_row_', '');
       const sel    = row.querySelector('.paket-select');
       const manual = document.querySelector(`.paket-manual[data-idx="${idx}"]`);
-      const input  = row.querySelector('.paket-input'); // fallback jika tidak ada savedPakets
+      const input  = row.querySelector('.paket-input');
+      const qtyEl  = document.getElementById('paket_qty_' + idx);
+      const qty    = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
 
       let val = '';
       if (input) {
         val = input.value.trim();
+        if (val) val = `${val} x${qty} orang`;
       } else if (sel) {
         if (sel.value === '__manual__') {
           val = manual ? manual.value.trim() : '';
+          if (val) val = `${val} x${qty} orang`;
         } else if (sel.value) {
-          // Cari harga dari allPakets
           const paketData = allPakets.find(p => p.nama === sel.value);
           if (paketData) {
-            val = `${paketData.nama} – Rp ${Number(paketData.harga).toLocaleString('id-ID')} x1 orang`;
-          } else {
-            val = sel.value;
+            val = `${paketData.nama} – Rp ${Number(paketData.harga).toLocaleString('id-ID')} x${qty} orang`;
           }
         }
       }
@@ -4769,7 +4785,7 @@ function syncPaketField() {
   function addPaketRow() {
     const container = document.getElementById('ef_paket_rows');
     if (!container) return;
-    const idx = Date.now(); // unique id
+    const idx = Date.now();
     const savedPakets = getPaketList();
 
     let html = `<div class="paket-row" id="paket_row_${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">`;
@@ -4793,6 +4809,14 @@ function syncPaketField() {
     }
 
     html += `
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+        <button type="button" onclick="paketJumlahChange(${idx}, -1)"
+          style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">−</button>
+        <span id="paket_qty_${idx}" data-qty="1"
+          style="min-width:24px;text-align:center;font-weight:600;font-size:13px;">1</span>
+        <button type="button" onclick="paketJumlahChange(${idx}, 1)"
+          style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">+</button>
+      </div>
       <button type="button" onclick="removePaketRow(${idx})"
         style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
         title="Hapus">
@@ -4803,7 +4827,7 @@ function syncPaketField() {
     if (savedPakets.length > 0) {
       html += `<input type="text" class="paket-manual" data-idx="${idx}"
         value="" placeholder="Nama paket manual"
-        style="display:none;margin-bottom:6px;width:calc(100% - 36px);padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+        style="display:none;margin-bottom:6px;width:calc(100% - 72px);padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
         oninput="syncPaketRows()">`;
     }
 
@@ -4820,7 +4844,15 @@ function syncPaketField() {
     if (manual) manual.remove();
     syncPaketRows();
   }
-
+  function paketJumlahChange(idx, delta) {
+    const qtyEl = document.getElementById('paket_qty_' + idx);
+    if (!qtyEl) return;
+    let qty = parseInt(qtyEl.dataset.qty) || 1;
+    qty = Math.max(1, qty + delta);
+    qtyEl.textContent = qty;
+    qtyEl.dataset.qty = qty;
+    syncPaketRows();
+  }
   function syncAddonField() {
     const hidden = document.getElementById('ef_addon');
     if (!hidden) return;
