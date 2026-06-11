@@ -4239,11 +4239,11 @@ const totalKas = totalKasBruto - totalPengeluaran;
     document.getElementById('keuanganCount').textContent = rows.length + ' transaksi';
 
 const totalDP         = rows.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
-const totalSisa       = rows.filter(b => b.status !== 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
-const sisaLunas       = rows.filter(b => b.status === 'lunas').reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
-const totalPendapatan = totalDP + sisaLunas;
-const lunas           = rows.filter(b => b.status === 'lunas').length;
-const belumLunas      = rows.filter(b => b.status !== 'lunas').length;
+const sudahSelesai    = (b) => b.status === 'lunas' || b.status === 'done';
+const sisaSelesai     = rows.filter(b => sudahSelesai(b)).reduce((s, b) => s + Math.max(0, parseRp(b.subtotal) - parseRp(b.dp) - parseRp(b.dp2)), 0);
+const totalPendapatan = totalDP + sisaSelesai;
+const lunas           = rows.filter(b => sudahSelesai(b)).length;
+const belumLunas      = rows.filter(b => !sudahSelesai(b)).length;
 
 document.getElementById('keuanganSummary').innerHTML = `
   <div class="keuangan-sum-card">
@@ -4255,11 +4255,7 @@ document.getElementById('keuanganSummary').innerHTML = `
     <div class="keuangan-sum-value" style="color:#2d5a0a;">${fmtRp(totalDP)}</div>
   </div>
   <div class="keuangan-sum-card">
-    <div class="keuangan-sum-label"><i class="ti ti-clock-dollar" style="font-size:13px;"></i> Sisa Belum Dibayar</div>
-    <div class="keuangan-sum-value" style="color:#f59e0b;">${fmtRp(totalSisa)}</div>
-  </div>
-  <div class="keuangan-sum-card">
-    <div class="keuangan-sum-label"><i class="ti ti-checks" style="font-size:13px;"></i> Lunas / Belum Lunas</div>
+    <div class="keuangan-sum-label"><i class="ti ti-checks" style="font-size:13px;"></i> Selesai / Belum Selesai</div>
     <div class="keuangan-sum-value" style="font-size:20px;">
       <span style="color:#2d5a0a;font-weight:700;">${lunas}</span>
       <span style="color:var(--border);font-size:14px;"> / </span>
@@ -4267,7 +4263,6 @@ document.getElementById('keuanganSummary').innerHTML = `
     </div>
   </div>
 `;
-
     if (rows.length === 0) {
       document.getElementById('keuanganTable').innerHTML = `
         <div class="empty-state">
