@@ -441,7 +441,17 @@
   color: #7c3aed;
   border: 0.5px solid rgba(124, 58, 237, 0.3);
 }
+.status-cancel {
+  background: rgba(220, 38, 38, 0.08);
+  color: #dc2626;
+  border: 0.5px solid rgba(220, 38, 38, 0.3);
+}
 
+.status-refund {
+  background: rgba(234, 88, 12, 0.08);
+  color: #ea580c;
+  border: 0.5px solid rgba(234, 88, 12, 0.3);
+}
     /* ── MAIN CONTENT ── */
     .dashboard-main {
       max-width: 1400px;
@@ -2075,6 +2085,8 @@
   <option value="dp2">DP ke-2</option>
   <option value="lunas">Lunas</option>
   <option value="done">Done</option>
+  <option value="cancel">Cancel</option>
+  <option value="refund">Refund</option>
 </select>
         </div>
         <div class="filter-group" id="filterGroupKeuanganBulan">
@@ -2707,17 +2719,21 @@
 
     filteredBookings.forEach(booking => {
       const status = booking.status || 'pending';
-      const statusClass = status === 'dp'    ? 'status-dp'
-  : status === 'dp2'   ? 'status-dp2'
-  : status === 'lunas' ? 'status-lunas'
-  : status === 'done'  ? 'status-done'
+      const statusClass = status === 'dp'     ? 'status-dp'
+  : status === 'dp2'    ? 'status-dp2'
+  : status === 'lunas'  ? 'status-lunas'
+  : status === 'done'   ? 'status-done'
+  : status === 'cancel' ? 'status-cancel'
+  : status === 'refund' ? 'status-refund'
   : 'status-dp';
      // statusText
-const statusText = status === 'dp'    ? 'DP'
-  : status === 'dp2'   ? 'DP ke-2'
-  : status === 'lunas' ? 'Lunas'
-  : status === 'done'  ? 'Done'
-  : 'DP'; // fallback default
+const statusText = status === 'dp'     ? 'DP'
+  : status === 'dp2'    ? 'DP ke-2'
+  : status === 'lunas'  ? 'Lunas'
+  : status === 'done'   ? 'Done'
+  : status === 'cancel' ? 'Cancel'
+  : status === 'refund' ? 'Refund'
+  : 'DP';
 
       const total = parseRp(booking.subtotal);
       const dp = parseRp(booking.dp);
@@ -2857,17 +2873,21 @@ const statusText = status === 'dp'    ? 'DP'
     const sisa = total - dp - dp2;
 
     const status = booking.status || 'pending';
-   const statusClass = status === 'dp'    ? 'status-dp'
-  : status === 'dp2'   ? 'status-dp2'
-  : status === 'lunas' ? 'status-lunas'
-  : status === 'done'  ? 'status-done'
+   const statusClass = status === 'dp'     ? 'status-dp'
+  : status === 'dp2'    ? 'status-dp2'
+  : status === 'lunas'  ? 'status-lunas'
+  : status === 'done'   ? 'status-done'
+  : status === 'cancel' ? 'status-cancel'
+  : status === 'refund' ? 'status-refund'
   : 'status-dp';
    // statusText
-const statusText = status === 'dp'    ? 'DP'
-  : status === 'dp2'   ? 'DP ke-2'
-  : status === 'lunas' ? 'Lunas'
-  : status === 'done'  ? 'Done'
-  : 'DP'; // fallback default
+const statusText = status === 'dp'     ? 'DP'
+  : status === 'dp2'    ? 'DP ke-2'
+  : status === 'lunas'  ? 'Lunas'
+  : status === 'done'   ? 'Done'
+  : status === 'cancel' ? 'Cancel'
+  : status === 'refund' ? 'Refund'
+  : 'DP';
     
     let html = `
       <div class="detail-section">
@@ -3702,7 +3722,9 @@ if (booking.bukti) {
   <option value="dp"    ${(b.status || 'dp') === 'dp'  ? 'selected' : ''}>DP</option>
   <option value="dp2"   ${b.status === 'dp2'           ? 'selected' : ''}>DP ke-2</option>
   <option value="lunas" ${b.status === 'lunas'         ? 'selected' : ''}>Lunas</option>
-  <option value="done"  ${b.status === 'done'          ? 'selected' : ''}>Done</option>
+  <option value="done"   ${b.status === 'done'          ? 'selected' : ''}>Done</option>
+  <option value="cancel" ${b.status === 'cancel'        ? 'selected' : ''}>Cancel</option>
+  <option value="refund" ${b.status === 'refund'        ? 'selected' : ''}>Refund</option>
 </select>
       </div>
 
@@ -4081,7 +4103,7 @@ if (blokirInfo) {
           <td class="price-col">${fmtRp(total)}</td>
           <td>${fmtRp(dp)}</td>
           <td>${sisa > 0 ? '<span style="color:var(--pink);font-weight:600;">'+fmtRp(sisa)+'</span>' : '<span style="color:#2d5a0a;font-weight:600;">Lunas</span>'}</td>
-         <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : 'Perlu Update Data'}</span></td>
+         <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' : 'Perlu Update Data'}</span></td>
         </tr>`;
       }).join('');
 
@@ -4333,19 +4355,41 @@ function renderKeuanganRingkasan(bulanFilter) {
 let totalKasBruto = 0, utangDP = 0, pendapatanDiakui = 0, proyeksiPelunasan = 0;
 
 filteredBookings.forEach(b => {
-    const subtotal    = parseRp(b.subtotal);
-    const dp          = parseRp(b.dp);
-    const dp2         = parseRp(b.dp2);
-    const sisa        = Math.max(0, subtotal - dp - dp2);
-    const isLunas      = b.status === 'lunas';
-    const isDone       = b.status === 'done';
-  const lunasBlmDone = isLunas;
-    // Utang DP: hanya booking yang belum acara (bukan confirmed/lunas)
-    const belumAcara  = b.status === 'dp' || b.status === 'dp2';
-   totalKasBruto     += dp + dp2 + (lunasBlmDone || isDone ? sisa : 0);
-utangDP           += belumAcara ? (dp + dp2) : lunasBlmDone ? subtotal : 0;
-pendapatanDiakui  += isDone ? subtotal : 0;
-proyeksiPelunasan += (belumAcara && sisa > 0) ? sisa : 0;
+  const subtotal     = parseRp(b.subtotal);
+  const dp           = parseRp(b.dp);
+  const dp2          = parseRp(b.dp2);
+  const dpMasuk      = dp + dp2;
+  const sisa         = Math.max(0, subtotal - dpMasuk);
+  const isLunas      = b.status === 'lunas';
+  const isDone       = b.status === 'done';
+  const isCancel     = b.status === 'cancel';
+  const isRefund     = b.status === 'refund';
+  const belumAcara   = b.status === 'dp' || b.status === 'dp2';
+
+  // Total Kas di Bank
+  // cancel : DP sudah masuk, tidak ada uang keluar → dp tetap dihitung masuk
+  // refund : DP sudah masuk tapi dikembalikan → tidak dihitung (nol kontribusi)
+  if (!isRefund) {
+    totalKasBruto += dpMasuk + (isLunas || isDone ? sisa : 0);
+  }
+
+  // Utang DP (Deferred): kewajiban yang belum diselesaikan
+  // cancel & refund → kewajiban gugur → Rp0 (tidak ditambahkan)
+  if (belumAcara) {
+    utangDP += dpMasuk;
+  } else if (isLunas) {
+    utangDP += subtotal;
+  }
+
+  // Pendapatan Diakui
+  // done   : seluruh subtotal diakui
+  // cancel : DP hangus → diakui sebagai pendapatan
+  // refund : tidak ada pendapatan
+  if (isDone)   pendapatanDiakui += subtotal;
+  if (isCancel) pendapatanDiakui += dpMasuk;
+
+  // Proyeksi Pelunasan: piutang aktif (belum lunas, belum cancel/refund)
+  if (belumAcara && sisa > 0) proyeksiPelunasan += sisa;
 });
 
 const totalPengeluaran = filteredPengeluaran.reduce((s, p) => s + (p.nominal || 0), 0);
@@ -4574,7 +4618,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         <td class="price-col">${fmtRp(dp)}</td>
         <td class="price-col">${dp2 > 0 ? fmtRp(dp2) : '—'}</td>
         <td class="price-col">${sisaHtml}</td>
-        <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : 'Perlu Update Data'}</span></td>
+        <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' : 'Perlu Update Data'}</span></td>
       </tr>`;
     }).join('');
 
@@ -5511,17 +5555,21 @@ function renderRecentBookings() {
       const sisa   = Math.max(0, total - dp);
       const status = b.status || 'dp';
 
-      const statusClass = status === 'dp'    ? 'status-dp'
-        : status === 'dp2'   ? 'status-dp2'
-        : status === 'lunas' ? 'status-lunas'
-        : status === 'done'  ? 'status-done'
-        : 'status-dp';
+      const statusClass = status === 'dp'     ? 'status-dp'
+  : status === 'dp2'    ? 'status-dp2'
+  : status === 'lunas'  ? 'status-lunas'
+  : status === 'done'   ? 'status-done'
+  : status === 'cancel' ? 'status-cancel'
+  : status === 'refund' ? 'status-refund'
+  : 'status-dp';
 
-      const statusText = status === 'dp'    ? 'DP'
-        : status === 'dp2'   ? 'DP ke-2'
-        : status === 'lunas' ? 'Lunas'
-        : status === 'done'  ? 'Done'
-        : 'DP';
+      const statusText = status === 'dp'     ? 'DP'
+  : status === 'dp2'    ? 'DP ke-2'
+  : status === 'lunas'  ? 'Lunas'
+  : status === 'done'   ? 'Done'
+  : status === 'cancel' ? 'Cancel'
+  : status === 'refund' ? 'Refund'
+  : 'DP';
 
       let tglOrder = '—';
       if (b.timestamp) {
