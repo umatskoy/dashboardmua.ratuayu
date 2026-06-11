@@ -3383,75 +3383,93 @@ if (booking.bukti) {
             </button>`;
         })()}
       </div>
-      <div class="edit-field">
+    <div class="edit-field">
         <label>Add On</label>
         ${(() => {
-          if (!allAddOns.length) {
-            return `<input type="text" id="ef_addon" value="${b.addon || ''}" placeholder="Tambahan layanan (tambah di Pengaturan)">`;
-          }
-
-          // Addon yang boleh kelipatan (cocokkan nama secara case-insensitive, trim)
-          const MULTI_ADDONS = ['hairdo','hijabstylist','hijabstylist+drappery','softlens minus','softlens non-minus'];
-          const isMulti = (nama) => MULTI_ADDONS.some(m => nama.trim().toLowerCase() === m);
-
-          // Parse qty dari currentAddon string: "Nama – Rp harga xN"
           const currentAddon = b.addon || '';
-          const parseQty = (nama) => {
-            const re = new RegExp(nama.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*[–-]\\s*Rp[\\s\\d.,]+x(\\d+)', 'i');
-            const m = currentAddon.match(re);
-            return m ? parseInt(m[1]) : 1;
+
+          // Parse existing addon string → array of {nama, qty}
+          const parseExistingAddons = (raw) => {
+            if (!raw.trim()) return [];
+            const sep = raw.includes('|') ? '|' : ',';
+            return raw.split(sep).map(s => s.trim()).filter(Boolean).map(item => {
+              const qtyMatch = item.match(/x(\d+)\s*$/i);
+              const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
+              // Ambil nama: sebelum " – Rp" atau sebelum " x"
+              const nama = item.split(/\s*[–\-]\s*Rp/i)[0].replace(/\s*x\d+\s*$/i, '').trim();
+              return { nama, qty };
+            });
           };
 
-          const checkboxes = allAddOns.map((a) => {
-            const isChecked = currentAddon.toLowerCase().includes(a.nama.toLowerCase());
-            const multi     = isMulti(a.nama);
-            const qty       = isChecked ? parseQty(a.nama) : 1;
-            const addonId   = 'addon_' + a.nama.replace(/\W/g,'_');
+          const existingAddons = parseExistingAddons(currentAddon);
 
-            if (multi) {
-              return `
-              <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;transition:background .15s;"
-                id="wrap_${addonId}">
-                <input type="checkbox" id="${addonId}" value="${a.nama}" data-harga="${a.harga}"
-                  ${isChecked ? 'checked' : ''}
-                  onchange="onAddonChange('${addonId}')"
-                  style="accent-color:var(--pink);width:15px;height:15px;cursor:pointer;flex-shrink:0;">
-                <label for="${addonId}" style="flex:1;cursor:pointer;margin:0;">${a.nama}</label>
-                <span style="color:var(--pink);font-weight:600;white-space:nowrap;">Rp ${Number(a.harga).toLocaleString('id-ID')}</span>
-                <div class="addon-qty-stepper" id="stepper_${addonId}" style="display:${isChecked ? 'flex' : 'none'};align-items:center;gap:4px;margin-left:4px;">
-                  <button type="button" onclick="addonQtyChange('${addonId}',-1)"
-                    style="width:24px;height:24px;border:1px solid var(--border);border-radius:5px;background:var(--bg-soft);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">−</button>
-                  <span id="qty_${addonId}" data-qty="${qty}"
-                    style="min-width:20px;text-align:center;font-weight:600;font-size:13px;">${qty}</span>
-                  <button type="button" onclick="addonQtyChange('${addonId}',1)"
-                    style="width:24px;height:24px;border:1px solid var(--border);border-radius:5px;background:var(--bg-soft);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">+</button>
-                </div>
+          const renderAddonRow = (nama, qty, idx) => {
+            const stepperHtml = `
+              <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                <button type="button" onclick="addonRowQtyChange(${idx}, -1)"
+                  style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">−</button>
+                <span id="addon_qty_${idx}" data-qty="${qty}"
+                  style="min-width:24px;text-align:center;font-weight:600;font-size:13px;">${qty}</span>
+                <button type="button" onclick="addonRowQtyChange(${idx}, 1)"
+                  style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">+</button>
               </div>`;
-            } else {
+
+            const removeBtn = `
+              <button type="button" onclick="removeAddonRow(${idx})"
+                style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
+                title="Hapus">
+                <i class="ti ti-x"></i>
+              </button>`;
+
+            if (!allAddOns.length) {
               return `
-              <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:13px;transition:background .15s;"
-                onmouseover="this.style.background='var(--bg-soft)'" onmouseout="this.style.background=''">
-                <input type="checkbox" id="${addonId}" value="${a.nama}" data-harga="${a.harga}"
-                  ${isChecked ? 'checked' : ''}
-                  onchange="syncAddonField()"
-                  style="accent-color:var(--pink);width:15px;height:15px;cursor:pointer;">
-                <span style="flex:1;">${a.nama}</span>
-                <span style="color:var(--pink);font-weight:600;">Rp ${Number(a.harga).toLocaleString('id-ID')}</span>
-              </label>`;
+                <div class="addon-row" id="addon_row_${idx}" data-idx="${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+                  <input type="text" class="addon-input" data-idx="${idx}"
+                    value="${nama}" placeholder="Nama add on"
+                    style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+                    oninput="syncAddonField()">
+                  ${stepperHtml}
+                  ${removeBtn}
+                </div>`;
             }
-          }).join('');
+
+            const matchedAddon = allAddOns.find(a => a.nama.toLowerCase() === nama.toLowerCase());
+            const options = allAddOns.map(a =>
+              `<option value="${a.nama}" ${matchedAddon && matchedAddon.nama === a.nama ? 'selected' : ''}>${a.nama} – Rp ${Number(a.harga).toLocaleString('id-ID')}</option>`
+            ).join('');
+
+            const isManual = nama && !matchedAddon;
+
+            return `
+              <div class="addon-row" id="addon_row_${idx}" data-idx="${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+                <select class="addon-select" data-idx="${idx}" onchange="onAddonSelectChange(${idx})"
+                  style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;">
+                  <option value="">-- Pilih Add On --</option>
+                  ${options}
+                  <option value="__manual__" ${isManual ? 'selected' : ''}>Ketik manual...</option>
+                </select>
+                ${stepperHtml}
+                ${removeBtn}
+              </div>
+              <input type="text" class="addon-manual" data-idx="${idx}"
+                value="${isManual ? nama : ''}"
+                placeholder="Nama add on manual"
+                style="display:${isManual ? 'block' : 'none'};margin-bottom:6px;width:calc(100% - 72px);padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+                oninput="syncAddonField()">`;
+          };
+
+          // Kalau belum ada addon sama sekali, tampilkan 1 row kosong
+          const rows = existingAddons.length > 0
+            ? existingAddons.map((a, i) => renderAddonRow(a.nama, a.qty, i))
+            : [renderAddonRow('', 1, 0)];
 
           return `
-            <div id="ef_addon_checks">${checkboxes}</div>
+            <div id="ef_addon_rows">${rows.join('')}</div>
             <input type="hidden" id="ef_addon" value="${currentAddon}">
-            <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:13px;color:var(--text-secondary);">
-              <input type="checkbox" id="ef_addon_manual_toggle" onchange="toggleAddonManual()"
-                style="accent-color:var(--pink);width:15px;height:15px;cursor:pointer;">
-              <span>Ketik manual...</span>
-            </label>
-            <input type="text" id="ef_addon_manual" placeholder="Tambahan layanan manual"
-              style="display:none;width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;"
-              oninput="syncAddonField()">`;
+            <button type="button" onclick="addAddonRow()"
+              style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px dashed var(--pink);background:var(--pink-light);color:var(--pink);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:2px;">
+              <i class="ti ti-plus" style="font-size:13px;"></i> Tambah Add On Lain
+            </button>`;
         })()}
       </div>
       <div class="edit-field">
@@ -5017,49 +5035,136 @@ function syncPaketField() {
     qtyEl.dataset.qty = qty;
     syncPaketRows();
   }
-  function syncAddonField() {
-    const hidden = document.getElementById('ef_addon');
-    if (!hidden) return;
-
-    const MULTI_ADDONS = ['hairdo','hijabstylist','hijabstylist+drappery','softlens minus','softlens non-minus'];
-    const isMulti = (nama) => MULTI_ADDONS.some(m => nama.trim().toLowerCase() === m);
-
-    const checks = document.querySelectorAll('#ef_addon_checks input[type=checkbox]:checked');
-    const parts = Array.from(checks).map(c => {
-      const nama  = c.value;
-      const harga = Number(c.dataset.harga);
-      if (isMulti(nama)) {
-        const addonId = 'addon_' + nama.replace(/\W/g,'_');
-        const qtyEl   = document.getElementById('qty_' + addonId);
-        const qty     = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
-        return `${nama} – Rp ${(harga * qty).toLocaleString('id-ID')} x${qty}`;
-      }
-      return `${nama} – Rp ${harga.toLocaleString('id-ID')} x1`;
-    });
-
-    const manual = document.getElementById('ef_addon_manual');
-    if (manual && manual.value.trim()) parts.push(manual.value.trim());
-    hidden.value = parts.join(', ');
-    hitungSubtotal(); // ← TAMBAH INI
+  function onAddonSelectChange(idx) {
+  const sel    = document.querySelector(`.addon-select[data-idx="${idx}"]`);
+  const manual = document.querySelector(`.addon-manual[data-idx="${idx}"]`);
+  if (!sel) return;
+  if (sel.value === '__manual__') {
+    if (manual) { manual.style.display = 'block'; manual.value = ''; manual.focus(); }
+  } else {
+    if (manual) { manual.style.display = 'none'; manual.value = ''; }
   }
-function hitungSubtotal() {
-  let hargaPaket = 0;
-  let namaPaket = '—';
+  syncAddonField();
+}
 
-  // Hitung dari multi-row paket
-  const paketSelects = document.querySelectorAll('#ef_paket_rows .paket-select');
-  const paketInputs  = document.querySelectorAll('#ef_paket_rows .paket-input');
-  const namaPaketParts = [];
+function addonRowQtyChange(idx, delta) {
+  const qtyEl = document.getElementById('addon_qty_' + idx);
+  if (!qtyEl) return;
+  let qty = parseInt(qtyEl.dataset.qty) || 1;
+  qty = Math.max(1, qty + delta);
+  qtyEl.textContent  = qty;
+  qtyEl.dataset.qty  = qty;
+  syncAddonField();
+}
 
- paketSelects.forEach(sel => {
-    if (sel.value && sel.value !== '__manual__') {
-      const paketData = allPakets.find(p => p.nama === sel.value);
-      if (paketData) {
-        const idx   = sel.dataset.idx;
-        const qtyEl = document.getElementById('paket_qty_' + idx);
-        const qty   = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
-        hargaPaket += (Number(paketData.harga) || 0) * qty;
-        namaPaketParts.push(paketData.nama + (qty > 1 ? ' x' + qty : ''));
+function addAddonRow() {
+  const container = document.getElementById('ef_addon_rows');
+  if (!container) return;
+  const idx = Date.now();
+
+  let html = `<div class="addon-row" id="addon_row_${idx}" data-idx="${idx}" style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">`;
+
+  if (!allAddOns.length) {
+    html += `<input type="text" class="addon-input" data-idx="${idx}"
+      value="" placeholder="Nama add on"
+      style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+      oninput="syncAddonField()">`;
+  } else {
+    const options = allAddOns.map(a =>
+      `<option value="${a.nama}">${a.nama} – Rp ${Number(a.harga).toLocaleString('id-ID')}</option>`
+    ).join('');
+    html += `
+      <select class="addon-select" data-idx="${idx}" onchange="onAddonSelectChange(${idx})"
+        style="flex:1;padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;">
+        <option value="">-- Pilih Add On --</option>
+        ${options}
+        <option value="__manual__">Ketik manual...</option>
+      </select>`;
+  }
+
+  html += `
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <button type="button" onclick="addonRowQtyChange(${idx}, -1)"
+        style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">−</button>
+      <span id="addon_qty_${idx}" data-qty="1"
+        style="min-width:24px;text-align:center;font-weight:600;font-size:13px;">1</span>
+      <button type="button" onclick="addonRowQtyChange(${idx}, 1)"
+        style="width:28px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">+</button>
+    </div>
+    <button type="button" onclick="removeAddonRow(${idx})"
+      style="flex-shrink:0;width:30px;height:36px;border:0.5px solid var(--border);background:var(--bg-soft);border-radius:6px;cursor:pointer;color:var(--text-secondary);font-size:14px;display:flex;align-items:center;justify-content:center;"
+      title="Hapus">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>`;
+
+  if (allAddOns.length) {
+    html += `<input type="text" class="addon-manual" data-idx="${idx}"
+      value="" placeholder="Nama add on manual"
+      style="display:none;margin-bottom:6px;width:calc(100% - 72px);padding:9px 12px;border:0.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;"
+      oninput="syncAddonField()">`;
+  }
+
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function removeAddonRow(idx) {
+  const row    = document.getElementById('addon_row_' + idx);
+  const manual = document.querySelector(`.addon-manual[data-idx="${idx}"]`);
+  const allRows = document.querySelectorAll('#ef_addon_rows .addon-row');
+  if (allRows.length <= 1) return; // minimal 1 row
+  if (row)    row.remove();
+  if (manual) manual.remove();
+  syncAddonField();
+}
+  
+  function syncAddonField() {
+  const hidden = document.getElementById('ef_addon');
+  if (!hidden) return;
+
+  const parts = [];
+
+  // Kumpulkan dari semua addon-row
+  document.querySelectorAll('#ef_addon_rows .addon-row').forEach(row => {
+    const idx    = row.dataset.idx;
+    const sel    = row.querySelector('.addon-select');
+    const manual = document.querySelector(`.addon-manual[data-idx="${idx}"]`);
+    const qtyEl  = document.getElementById('addon_qty_' + idx);
+    const qty    = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+
+    let val = '';
+    if (sel) {
+      if (sel.value === '__manual__') {
+        val = manual ? manual.value.trim() : '';
+        if (val) val = `${val} x${qty}`;
+      } else if (sel.value) {
+        const addonData = allAddOns.find(a => a.nama === sel.value);
+        if (addonData) {
+          const totalHarga = Number(addonData.harga) * qty;
+          val = `${addonData.nama} – Rp ${totalHarga.toLocaleString('id-ID')} x${qty}`;
+        }
+      }
+    }
+    if (val) parts.push(val);
+  });
+
+  hidden.value = parts.join(' | ');
+  hitungSubtotal();
+}
+let hargaAddon = 0;
+  let namaAddonParts = [];
+
+  document.querySelectorAll('#ef_addon_rows .addon-row').forEach(row => {
+    const idx    = row.dataset.idx;
+    const sel    = row.querySelector('.addon-select');
+    const qtyEl  = document.getElementById('addon_qty_' + idx);
+    const qty    = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+
+    if (sel && sel.value && sel.value !== '__manual__') {
+      const addonData = allAddOns.find(a => a.nama === sel.value);
+      if (addonData) {
+        hargaAddon += Number(addonData.harga) * qty;
+        namaAddonParts.push(addonData.nama + (qty > 1 ? ' x' + qty : ''));
       }
     }
   });
