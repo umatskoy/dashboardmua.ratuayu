@@ -3893,6 +3893,9 @@ if (blokirInfo) {
 
     const statsGrid = document.getElementById('statsGrid');
     statsGrid.style.display = page === 'dashboard' ? '' : 'none';
+    // Sembunyikan recent bookings segera saat pindah halaman
+    const recentSection = document.getElementById('recentBookingsSection');
+    if (recentSection) recentSection.style.display = page === 'dashboard' ? 'block' : 'none';
 
     const fg1 = document.getElementById('filterGroupMonth');
     const fg2 = document.getElementById('filterGroupStatus');
