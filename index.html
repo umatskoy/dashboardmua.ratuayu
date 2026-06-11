@@ -5151,7 +5151,34 @@ function removeAddonRow(idx) {
   hidden.value = parts.join(' | ');
   hitungSubtotal();
 }
-let hargaAddon = 0;
+function hitungSubtotal() {
+  let hargaPaket = 0;
+  let namaPaket = '—';
+
+  const paketSelects = document.querySelectorAll('#ef_paket_rows .paket-select');
+  const paketInputs  = document.querySelectorAll('#ef_paket_rows .paket-input');
+  const namaPaketParts = [];
+
+  paketSelects.forEach(sel => {
+    if (sel.value && sel.value !== '__manual__') {
+      const paketData = allPakets.find(p => p.nama === sel.value);
+      if (paketData) {
+        const idx   = sel.dataset.idx;
+        const qtyEl = document.getElementById('paket_qty_' + idx);
+        const qty   = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+        hargaPaket += (Number(paketData.harga) || 0) * qty;
+        namaPaketParts.push(paketData.nama + (qty > 1 ? ' x' + qty : ''));
+      }
+    }
+  });
+  paketInputs.forEach(inp => {
+    if (inp.value.trim()) namaPaketParts.push(inp.value.trim());
+  });
+
+  namaPaket = namaPaketParts.length ? namaPaketParts.join(' + ') : '—';
+  const adaSatupunPaketDipilih = namaPaketParts.length > 0;
+
+  let hargaAddon = 0;
   let namaAddonParts = [];
 
   document.querySelectorAll('#ef_addon_rows .addon-row').forEach(row => {
@@ -5168,38 +5195,10 @@ let hargaAddon = 0;
       }
     }
   });
-  paketInputs.forEach(inp => {
-    if (inp.value.trim()) namaPaketParts.push(inp.value.trim());
-  });
-
-  namaPaket = namaPaketParts.length ? namaPaketParts.join(' + ') : '—';
-
-  // Jangan override subtotal kalau tidak ada paket dipilih dari dropdown
-  const adaSatupunPaketDipilih = namaPaketParts.length > 0;
-
-  let hargaAddon = 0;
-  let namaAddonParts = [];
-  const MULTI_ADDONS = ['hairdo','hijabstylist','hijabstylist+drappery','softlens minus','softlens non-minus'];
-  const isMulti = (nama) => MULTI_ADDONS.some(m => nama.trim().toLowerCase() === m);
-  const checks = document.querySelectorAll('#ef_addon_checks input[type=checkbox]:checked');
-  checks.forEach(c => {
-    const harga = Number(c.dataset.harga) || 0;
-    if (isMulti(c.value)) {
-      const addonId = 'addon_' + c.value.replace(/\W/g,'_');
-      const qtyEl   = document.getElementById('qty_' + addonId);
-      const qty     = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
-      hargaAddon += harga * qty;
-      namaAddonParts.push(c.value + (qty > 1 ? ' x' + qty : ''));
-    } else {
-      hargaAddon += harga;
-      namaAddonParts.push(c.value);
-    }
-  });
 
   const transportInput = document.getElementById('ef_transport');
   const hargaTransport = transportInput ? parseRp(transportInput.value) : 0;
 
-  // Update subtotal field
   if (!adaSatupunPaketDipilih) {
     updateRingkasan(null, hargaAddon, hargaTransport, namaPaket, namaAddonParts);
     return;
