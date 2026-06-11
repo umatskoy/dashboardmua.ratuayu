@@ -1998,6 +1998,17 @@
     </div>
   </div>
 
+      <!-- Recent Bookings -->
+  <div id="recentBookingsSection" style="margin-top:0;">
+    <div class="bookings-section">
+      <div class="bookings-header">
+        <h2>Booking Terbaru</h2>
+        <span class="bookings-count" id="recentBookingsCount">5 booking</span>
+      </div>
+      <div class="bookings-table" id="recentBookingsTable"></div>
+    </div>
+  </div>
+
   <!-- Kalender Ketersediaan -->
   <div class="page-panel" id="page-kalender" style="display:none;">
     <div class="calendar-section" style="margin-bottom:0;">
@@ -2523,6 +2534,7 @@
     renderTable();
     updateStats();
     renderCalendar();
+    renderRecentBookings();
   }
 
   /* ── Render Table ── */
@@ -3895,6 +3907,7 @@ if (blokirInfo) {
 
     if (page === 'kalender') renderCalendar();
     if (page === 'kinerja')  renderKinerja();
+    if (page === 'dashboard') renderRecentBookings();
     if (page === 'keuangan') {
   keuanganActiveTab = 'ringkasan';
   document.getElementById('tab-ringkasan').classList.add('active');
@@ -4993,7 +5006,91 @@ function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAd
     if (toggle.checked) input.focus();
     syncAddonField();
   }
+function renderRecentBookings() {
+    const container = document.getElementById('recentBookingsTable');
+    const section   = document.getElementById('recentBookingsSection');
+    if (!container || !section) return;
 
+    // Hanya tampil di halaman dashboard
+    section.style.display = currentPage === 'dashboard' ? 'block' : 'none';
+    if (currentPage !== 'dashboard') return;
+
+    if (allBookings.length === 0) {
+      container.innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i><p>Belum ada data booking</p></div>';
+      return;
+    }
+
+    // Sort by timestamp terbaru
+    const sorted = [...allBookings].sort((a, b) => {
+      const da = a.timestamp ? new Date(a.timestamp) : new Date(0);
+      const db = b.timestamp ? new Date(b.timestamp) : new Date(0);
+      return db - da;
+    }).slice(0, 5);
+
+    document.getElementById('recentBookingsCount').textContent = sorted.length + ' booking terbaru';
+
+    const rows = sorted.map(b => {
+      const total  = parseRp(b.subtotal);
+      const dp     = parseRp(b.dp) + parseRp(b.dp2);
+      const sisa   = Math.max(0, total - dp);
+      const status = b.status || 'dp';
+
+      const statusClass = status === 'dp'    ? 'status-dp'
+        : status === 'dp2'   ? 'status-dp2'
+        : status === 'lunas' ? 'status-lunas'
+        : status === 'done'  ? 'status-done'
+        : 'status-dp';
+
+      const statusText = status === 'dp'    ? 'DP'
+        : status === 'dp2'   ? 'DP ke-2'
+        : status === 'lunas' ? 'Lunas'
+        : status === 'done'  ? 'Done'
+        : 'DP';
+
+      let tglOrder = '—';
+      if (b.timestamp) {
+        const d = new Date(b.timestamp);
+        if (!isNaN(d)) tglOrder = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+      }
+
+      const sisaHtml = (status === 'lunas' || status === 'done')
+        ? `<span style="color:#2d5a0a;font-weight:600;">Lunas</span>`
+        : sisa > 0
+          ? `<span style="color:var(--pink);font-weight:600;">${fmtRp(sisa)}</span>`
+          : `<span style="color:#2d5a0a;font-weight:600;">Lunas</span>`;
+
+      const encoded = encodeURIComponent(JSON.stringify(b));
+
+      return `<tr onclick="openModal('${encoded}')" style="cursor:pointer;">
+        <td class="date-col" style="white-space:nowrap;font-size:12px;">${tglOrder}</td>
+        <td class="name-col">${b.nama || '—'}</td>
+        <td class="date-col" style="white-space:nowrap;">${fmtDate(b.tanggal)}</td>
+        <td style="font-size:12px;white-space:nowrap;">${fmtTime(b.jam_selesai) !== '-' ? fmtTime(b.jam_selesai) : '—'}</td>
+        <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${b.lokasi||''}">${b.lokasi || '—'}</td>
+        <td class="price-col">${fmtRp(total)}</td>
+        <td class="price-col">${fmtRp(dp)}</td>
+        <td>${sisaHtml}</td>
+        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+      </tr>`;
+    }).join('');
+
+    container.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Tgl Order</th>
+          <th>Nama</th>
+          <th>Tgl MakeUp</th>
+          <th>Jam</th>
+          <th>Lokasi</th>
+          <th>Total</th>
+          <th>DP</th>
+          <th>Sisa Bayar</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+  
 </script>
 
 
