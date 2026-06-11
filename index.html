@@ -4887,12 +4887,15 @@ function hitungSubtotal() {
   const paketInputs  = document.querySelectorAll('#ef_paket_rows .paket-input');
   const namaPaketParts = [];
 
-  paketSelects.forEach(sel => {
+ paketSelects.forEach(sel => {
     if (sel.value && sel.value !== '__manual__') {
       const paketData = allPakets.find(p => p.nama === sel.value);
       if (paketData) {
-        hargaPaket += Number(paketData.harga) || 0;
-        namaPaketParts.push(paketData.nama);
+        const idx   = sel.dataset.idx;
+        const qtyEl = document.getElementById('paket_qty_' + idx);
+        const qty   = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+        hargaPaket += (Number(paketData.harga) || 0) * qty;
+        namaPaketParts.push(paketData.nama + (qty > 1 ? ' x' + qty : ''));
       }
     }
   });
