@@ -2507,6 +2507,7 @@
       hijab_stylist3:  pick('hijab_stylist3', 'hijab stylist3', 'Hijab Stylist 3', 'hijab3'),
       hair_stylist3:   pick('hair_stylist3', 'hair stylist3', 'Hair Stylist 3', 'hair3'),
       notes:           pick('notes', 'Notes', 'catatan', 'Catatan', 'note'),
+      addon_custom:    pick('addon_custom', 'Add On Custom', 'add on custom', 'addoncustom'),
       // simpan semua field asli juga, untuk jaga-jaga
       _raw: raw,
     };
@@ -3046,6 +3047,10 @@ const statusText = status === 'dp'     ? 'DP'
           <span class="detail-value">${renderLayananList(booking.addon, true)}</span>
         </div>
         <div class="detail-row">
+          <span class="detail-label">Add On Custom</span>
+          <span class="detail-value">${renderLayananList(booking.addon_custom, true)}</span>
+        </div>
+        <div class="detail-row">
           <span class="detail-label">Transport</span>
           <span class="detail-value">${booking.transport_biaya ? fmtRp(parseRp(booking.transport_biaya)) || booking.transport_biaya : '-'}</span>
         </div>
@@ -3161,6 +3166,7 @@ if (booking.bukti) {
     lines.push("💄 LAYANAN");
     lines.push("Paket    : " + v(b.paket));
     lines.push("Add On   : " + v(b.addon));
+    lines.push("Add On Custom: " + v(b.addon_custom));
     const transport = parseRp(b.transport_biaya);
     lines.push("Transport: " + (transport > 0 ? fmtRp(transport) : '-'));
 
@@ -4978,6 +4984,9 @@ document.getElementById('keuanganSummary').innerHTML = `
 
     drawRow('Paket',  parseItems(b.paket), false);
     drawRow('Add On', parseItems(b.addon), true);
+    if (b.addon_custom && b.addon_custom.toString().trim()) {
+      drawRow('Add On Custom', parseItems(b.addon_custom), true);
+    }
 
     const transport = parseRp(b.transport_biaya);
     if (transport > 0) {
