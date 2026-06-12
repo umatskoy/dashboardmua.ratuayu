@@ -2234,6 +2234,20 @@
             <option value="">Semua Bulan</option>
           </select>
         </div>
+        <button onclick="toggleNominal()" style="
+          display:flex; align-items:center; gap:6px;
+          padding:8px 14px;
+          border:0.5px solid var(--border);
+          background:var(--bg);
+          color:var(--text-secondary);
+          border-radius:6px;
+          font-family:'DM Sans',sans-serif;
+          font-size:12px; font-weight:500;
+          cursor:pointer; transition:all 0.18s;
+        " onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+          <i id="btnToggleNominalIcon" class="ti ti-eye-off" style="font-size:14px;"></i>
+        </button>
         <button class="btn-refresh" id="refreshBtn" onclick="loadBookings()">
           <i class="ti ti-refresh" style="font-size:14px;"></i>
           <span>Refresh</span>
@@ -2512,7 +2526,21 @@
   let allPemasukanLain = [];
   let allMutasi = [];
   let keuanganActiveTab = 'ringkasan';
+  let nominalHidden = false;
 
+function toggleNominal() {
+  nominalHidden = !nominalHidden;
+  const icon = document.getElementById('btnToggleNominalIcon');
+  if (icon) icon.className = nominalHidden ? 'ti ti-eye' : 'ti ti-eye-off';
+  // Re-render halaman yang sedang aktif
+  updateStats();
+  renderRecentBookings();
+  if (currentPage === 'keuangan') renderKeuangan();
+}
+
+function maskRp(n) {
+  return nominalHidden ? 'Rp ••••••' : fmtRp(n);
+}
   /* ── Format Helpers ── */
   function fmtRp(n) {
     if (n === 0 || !n) return 'Rp 0';
@@ -2983,14 +3011,14 @@ const statusText = status === 'dp'     ? 'DP'
     document.getElementById('totalOrang').textContent      = totalOrang;
 
     // Scorecard Pendapatan Diakui
-    document.getElementById('totalRevenue').textContent    = fmtRp(pendapatanDiakui);
+   document.getElementById('totalRevenue').textContent    = maskRp(pendapatanDiakui);
     document.getElementById('totalDpDiterima').textContent = 'Dari booking status Done';
     document.getElementById('totalPelunasan').textContent  = '';
 
     // Scorecard Net Profit Margin
     const pendingEl = document.getElementById('pendingDP');
     if (pendingEl) {
-      pendingEl.textContent  = netMargin + '%';
+      pendingEl.textContent  = nominalHidden ? '••%' : netMargin + '%';
       pendingEl.style.color  = marginColor;
       pendingEl.style.fontSize = '28px';
     }
@@ -4728,7 +4756,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Total Kas di Bank</div>
           <i class="ti ti-building-bank scorecard-icon" style="color:var(--pink);"></i>
         </div>
-        <div class="scorecard-value" style="color:var(--pink);">${fmtRp(totalKasRekening)}</div>
+        <div class="scorecard-value" style="color:var(--pink);">${maskRp(totalKasRekening)}</div>
         <div class="scorecard-sub">Gabungan semua rekening</div>
       </div>
 
@@ -4737,7 +4765,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Utang DP (Deferred)</div>
           <i class="ti ti-clock-dollar scorecard-icon" style="color:#f59e0b;"></i>
         </div>
-        <div class="scorecard-value" style="color:#f59e0b;">${fmtRp(utangDP)}</div>
+        <div class="scorecard-value" style="color:#f59e0b;">${maskRp(utangDP)}</div>
         <div class="scorecard-sub">DP yang Belum Jadi Hak Bisnis</div>
       </div>
 
@@ -4746,7 +4774,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Pendapatan Diakui</div>
           <i class="ti ti-circle-check scorecard-icon" style="color:#2d5a0a;"></i>
         </div>
-        <div class="scorecard-value" style="color:#2d5a0a;">${fmtRp(pendapatanDiakui)}</div>
+        <div class="scorecard-value" style="color:#2d5a0a;">${maskRp(pendapatanDiakui)}</div>
         <div class="scorecard-sub">Booking Done + Tips</div>
       </div>
 
@@ -4755,7 +4783,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Proyeksi Pelunasan</div>
           <i class="ti ti-trending-up scorecard-icon" style="color:#2563eb;"></i>
         </div>
-        <div class="scorecard-value" style="color:#2563eb;">${fmtRp(proyeksiPelunasan)}</div>
+        <div class="scorecard-value" style="color:#2563eb;">${maskRp(proyeksiPelunasan)}</div>
         <div class="scorecard-sub">Piutang Klien Aktif</div>
       </div>
 
@@ -4764,7 +4792,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Total Pengeluaran</div>
           <i class="ti ti-arrow-up-circle scorecard-icon" style="color:#dc2626;"></i>
         </div>
-        <div class="scorecard-value" style="color:#dc2626;">${fmtRp(totalPengeluaran)}</div>
+        <div class="scorecard-value" style="color:#dc2626;">${maskRp(totalPengeluaran)}</div>
         <div class="scorecard-sub">Semua rekening</div>
       </div>
 
@@ -4773,7 +4801,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Net Profit Margin</div>
           <i class="ti ti-chart-pie scorecard-icon" style="color:${marginColor};"></i>
         </div>
-        <div class="scorecard-value" style="color:${marginColor};">${netMargin}%</div>
+       <div class="scorecard-value" style="color:${marginColor};">${nominalHidden ? '••%' : netMargin + '%'}</div>
         <div class="scorecard-sub">Pendapatan Diakui − Pengeluaran</div>
       </div>
 
