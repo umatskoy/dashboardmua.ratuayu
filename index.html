@@ -1091,14 +1091,21 @@
     }
 
     .calendar-body {
-      padding: 1.5rem;
-    }
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.calendar-grid {
+  min-width: 560px;
+}
 
     .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
-    }
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  min-width: 560px;
+  width: 100%;
+}
 
     .cal-day-name {
       text-align: center;
