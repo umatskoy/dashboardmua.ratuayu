@@ -5213,7 +5213,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         if (dataMT.success) allMutasi        = dataMT.mutasi        || [];
       } catch(e) { console.warn('Silent refresh jurnal gagal:', e.message); }
       
-      if (currentPage === 'keuangan') renderKeuangan();
+     if (currentPage === 'keuangan' && !activeRekeningPanel) renderKeuangan();
 
     } catch (err) {
       console.warn('[Silent Refresh] Gagal:', err.message);
