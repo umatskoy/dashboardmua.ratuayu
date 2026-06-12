@@ -2058,7 +2058,7 @@
 </button>
         <span class="topbar-title" id="topbarTitle">Dashboard</span>
       </div>
-      <div class="topbar-right">
+      <div class="topbar-right" id="topbarRight">
         <div class="filter-group" id="filterGroupMonth">
           <label for="filterMonth">Bulan:</label>
           <select id="filterMonth" onchange="filterBookings()">
@@ -2098,6 +2098,25 @@
         <button class="btn-refresh" id="refreshBtn" onclick="loadBookings()">
           <i class="ti ti-refresh" style="font-size:14px;"></i>
           <span>Refresh</span>
+        </button>
+        <button id="btnToggleFilter" onclick="toggleFilter()" style="
+          display:none;
+          align-items:center;
+          gap:6px;
+          padding:8px 14px;
+          border:0.5px solid var(--border);
+          background:var(--bg);
+          color:var(--text-secondary);
+          border-radius:6px;
+          font-family:'DM Sans',sans-serif;
+          font-size:12px;
+          font-weight:500;
+          cursor:pointer;
+          transition:all 0.18s;
+        " onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'"
+           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+          <i class="ti ti-filter" style="font-size:14px;"></i>
+          <span id="btnToggleFilterLabel">Filter</span>
         </button>
       </div>
     </div>
@@ -4145,7 +4164,31 @@ if (blokirInfo) {
   };
 
   let currentPage = 'dashboard';
+  let filterVisible = true;
 
+  function toggleFilter() {
+    filterVisible = !filterVisible;
+    updateFilterVisibility();
+  }
+
+  function updateFilterVisibility() {
+    const ids = ['filterGroupMonth','filterGroupPaket','filterGroupMUA','filterGroupStatus'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      // Hanya sembunyikan kalau sedang di halaman daftar
+      if (currentPage === 'daftar') {
+        el.style.display = filterVisible ? '' : 'none';
+      }
+    });
+    const label = document.getElementById('btnToggleFilterLabel');
+    if (label) label.textContent = filterVisible ? 'Sembunyikan Filter' : 'Filter';
+    const btn = document.getElementById('btnToggleFilter');
+    if (btn) {
+      btn.style.borderColor = filterVisible ? 'var(--pink)' : 'var(--border)';
+      btn.style.color       = filterVisible ? 'var(--pink)' : 'var(--text-secondary)';
+    }
+  }
   function switchPage(page) {
     currentPage = page;
 
@@ -4171,6 +4214,14 @@ if (blokirInfo) {
     fg3.style.display = page === 'daftar'   ? '' : 'none';
     fg4.style.display = page === 'keuangan' ? '' : 'none';
     fg5.style.display = page === 'daftar'   ? '' : 'none';
+
+    const btnToggle = document.getElementById('btnToggleFilter');
+    if (btnToggle) {
+      btnToggle.style.display = page === 'daftar' ? 'flex' : 'none';
+    }
+    // Reset filter visibility setiap pindah halaman
+    filterVisible = true;
+    updateFilterVisibility();
 
     const pageDaftar   = document.getElementById('page-daftar');
     const pageKalender = document.getElementById('page-kalender');
