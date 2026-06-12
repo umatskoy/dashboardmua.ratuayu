@@ -2265,6 +2265,9 @@
 <button class="keuangan-tab" id="tab-pengeluaran" onclick="switchKeuanganTab('pengeluaran')">
   <i class="ti ti-arrow-up-circle"></i> Jurnal Pengeluaran
 </button>
+<button class="keuangan-tab" id="tab-pemasukan-lain" onclick="switchKeuanganTab('pemasukan-lain')">
+  <i class="ti ti-plus-circle"></i> Pemasukan Lain
+</button>        
       </div>
       <!-- Summary bar -->
       <div class="keuangan-summary" id="keuanganSummary"></div>
@@ -2374,6 +2377,7 @@
   let filteredBookings = [];
   let currentBooking = null; // booking yang sedang dibuka di modal
   let allPengeluaran = [];
+  let allPemasukanLain = [];
   let keuanganActiveTab = 'ringkasan';
 
   /* ── Format Helpers ── */
@@ -2552,13 +2556,21 @@
         allKinerja = data.kinerja || [];
 
         // Pengeluaran — fetch terpisah
-        try {
-          const resPengeluaran = await fetch(APPS_SCRIPT_URL + '?action=getPengeluaran');
-          const dataPengeluaran = await resPengeluaran.json();
-          if (dataPengeluaran.success) allPengeluaran = dataPengeluaran.pengeluaran || [];
+       try {
+          const [resPengeluaran, resPemasukanLain] = await Promise.all([
+            fetch(APPS_SCRIPT_URL + '?action=getPengeluaran'),
+            fetch(APPS_SCRIPT_URL + '?action=getPemasukanLain')
+          ]);
+          const [dataPengeluaran, dataPemasukanLain] = await Promise.all([
+            resPengeluaran.json(),
+            resPemasukanLain.json()
+          ]);
+          if (dataPengeluaran.success)   allPengeluaran   = dataPengeluaran.pengeluaran || [];
+          if (dataPemasukanLain.success) allPemasukanLain = dataPemasukanLain.pemasukanLain || [];
         } catch (errP) {
-          console.error('Error loading pengeluaran:', errP);
-          allPengeluaran = [];
+          console.error('Error loading jurnal:', errP);
+          allPengeluaran   = [];
+          allPemasukanLain = [];
         }
 
         if (currentPage === 'keuangan') renderKeuangan();
@@ -4369,6 +4381,12 @@ function populateKeuanganFilter() {
     if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
   });
 
+  // Ambil bulan dari pemasukan lain
+  allPemasukanLain.forEach(p => {
+    const d = parseDate(p.tanggal);
+    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+
   // Rebuild seluruh dropdown dari awal
   sel.innerHTML = '<option value="">Semua Bulan</option>';
   Array.from(months).sort().reverse().forEach(m => {
@@ -4382,9 +4400,10 @@ function populateKeuanganFilter() {
 
 function switchKeuanganTab(tab) {
   keuanganActiveTab = tab;
-  document.getElementById('tab-ringkasan').classList.toggle('active', tab === 'ringkasan');
-  document.getElementById('tab-pemasukan').classList.toggle('active', tab === 'pemasukan');
-  document.getElementById('tab-pengeluaran').classList.toggle('active', tab === 'pengeluaran');
+  document.getElementById('tab-ringkasan').classList.toggle('active',       tab === 'ringkasan');
+  document.getElementById('tab-pemasukan').classList.toggle('active',       tab === 'pemasukan');
+  document.getElementById('tab-pengeluaran').classList.toggle('active',     tab === 'pengeluaran');
+  document.getElementById('tab-pemasukan-lain').classList.toggle('active',  tab === 'pemasukan-lain');
   renderKeuangan();
 }
 
@@ -4394,6 +4413,8 @@ function switchKeuanganTab(tab) {
     renderKeuanganRingkasan(bulanFilter);
   } else if (keuanganActiveTab === 'pengeluaran') {
     renderKeuanganPengeluaran(bulanFilter);
+  } else if (keuanganActiveTab === 'pemasukan-lain') {
+    renderKeuanganPemasukanLain(bulanFilter);
   } else {
     renderKeuanganPemasukan(bulanFilter);
   }
@@ -4458,8 +4479,24 @@ filteredBookings.forEach(b => {
 
 const totalPengeluaran = filteredPengeluaran.reduce((s, p) => s + (p.nominal || 0), 0);
 
-// Total Kas Bersih = uang masuk dikurangi pengeluaran
-const totalKas = totalKasBruto - totalPengeluaran;
+// Pemasukan lain — filter bulan
+const KATEGORI_DIAKUI = ['tips client', 'tips'];
+const filteredPemasukanLain = allPemasukanLain.filter(p => {
+  if (!bulanFilter) return true;
+  const d = parseDate(p.tanggal);
+  if (!d) return false;
+  return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
+});
+const totalPemasukanLain       = filteredPemasukanLain.reduce((s, p) => s + (p.nominal || 0), 0);
+const totalPemasukanLainDiakui = filteredPemasukanLain
+  .filter(p => KATEGORI_DIAKUI.includes(p.keterangan.toLowerCase()))
+  .reduce((s, p) => s + (p.nominal || 0), 0);
+
+// Total Kas Bersih = uang masuk + pemasukan lain - pengeluaran
+const totalKas = totalKasBruto + totalPemasukanLain - totalPengeluaran;
+
+// Pendapatan diakui ikut sertakan tips
+pendapatanDiakui += totalPemasukanLainDiakui;
   const netProfit        = pendapatanDiakui - totalPengeluaran;
   const netMargin        = pendapatanDiakui > 0
     ? Math.round((netProfit / pendapatanDiakui) * 100)
@@ -4704,7 +4741,78 @@ document.getElementById('keuanganSummary').innerHTML = `
         <tbody>${tableRows}</tbody>
       </table>`;
   }
+  function renderKeuanganPemasukanLain(bulanFilter) {
+    // Kategori yang masuk Pendapatan Diakui
+    const KATEGORI_DIAKUI = ['tips client', 'tips'];
 
+    let rows = allPemasukanLain.filter(p => {
+      if (!bulanFilter) return true;
+      const d = parseDate(p.tanggal);
+      if (!d) return false;
+      return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
+    });
+
+    rows = [...rows].sort((a, b) => {
+      const da = parseDate(a.tanggal) || new Date(0);
+      const db = parseDate(b.tanggal) || new Date(0);
+      return db - da;
+    });
+
+    document.getElementById('keuanganCount').textContent = rows.length + ' transaksi';
+
+    const totalNominal   = rows.reduce((s, p) => s + (p.nominal || 0), 0);
+    const totalDiakui    = rows.filter(p => KATEGORI_DIAKUI.includes(p.keterangan.toLowerCase()))
+                               .reduce((s, p) => s + (p.nominal || 0), 0);
+    const totalTidakDiakui = totalNominal - totalDiakui;
+
+    document.getElementById('keuanganSummary').innerHTML = `
+      <div class="keuangan-sum-card">
+        <div class="keuangan-sum-label"><i class="ti ti-plus-circle" style="font-size:13px;"></i> Total Pemasukan Lain</div>
+        <div class="keuangan-sum-value" style="color:var(--pink);">${fmtRp(totalNominal)}</div>
+      </div>
+      <div class="keuangan-sum-card">
+        <div class="keuangan-sum-label"><i class="ti ti-circle-check" style="font-size:13px;"></i> Masuk Pendapatan</div>
+        <div class="keuangan-sum-value" style="color:#2d5a0a;">${fmtRp(totalDiakui)}</div>
+      </div>
+      <div class="keuangan-sum-card">
+        <div class="keuangan-sum-label"><i class="ti ti-info-circle" style="font-size:13px;"></i> Hanya Kas (Tidak Diakui)</div>
+        <div class="keuangan-sum-value" style="color:#2563eb;">${fmtRp(totalTidakDiakui)}</div>
+      </div>
+    `;
+
+    if (rows.length === 0) {
+      document.getElementById('keuanganTable').innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-receipt-off"></i>
+          <p>Tidak ada data pemasukan lain</p>
+        </div>`;
+      return;
+    }
+
+    const tableRows = rows.map(p => {
+      const isDiakui = KATEGORI_DIAKUI.includes(p.keterangan.toLowerCase());
+      const badge = isDiakui
+        ? `<span style="background:rgba(45,90,10,0.08);color:#2d5a0a;border:0.5px solid rgba(45,90,10,0.3);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;">Pendapatan</span>`
+        : `<span style="background:rgba(37,99,235,0.08);color:#2563eb;border:0.5px solid rgba(37,99,235,0.3);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;">Kas Saja</span>`;
+      return `<tr>
+        <td class="date-col" style="white-space:nowrap;">${fmtDate(p.tanggal)}</td>
+        <td>${p.keterangan || '—'}</td>
+        <td>${badge}</td>
+        <td class="price-col" style="color:#2d5a0a;">${fmtRp(p.nominal)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('keuanganTable').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Tanggal</th>
+          <th>Keterangan</th>
+          <th>Jenis</th>
+          <th>Nominal</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>`;
+  }
   function renderKeuanganPengeluaran(bulanFilter) {
     let rows = allPengeluaran.filter(p => {
       if (!bulanFilter) return true;
@@ -4817,6 +4925,11 @@ document.getElementById('keuanganSummary').innerHTML = `
         populateKeuanganFilter();
         document.getElementById('filterKeuanganBulan').value = savedKeuBulan2;
       }
+      try {
+        const resPL = await fetch(APPS_SCRIPT_URL + '?action=getPemasukanLain');
+        const dataPL = await resPL.json();
+        if (dataPL.success) allPemasukanLain = dataPL.pemasukanLain || [];
+      } catch(e) { console.warn('Silent refresh pemasukan lain gagal:', e.message); }
       
       if (currentPage === 'keuangan') renderKeuangan();
 
