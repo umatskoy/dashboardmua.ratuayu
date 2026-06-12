@@ -1633,138 +1633,7 @@
   font-style: italic;
   line-height: 1.4;
 }
-/* ── SCORECARD REKENING ── */
-.rekening-scorecards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.25rem;
-  padding: 0 1.5rem 1.5rem;
-}
 
-.rekening-card {
-  background: var(--bg);
-  border: 0.5px solid var(--border);
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.02);
-  transition: box-shadow 0.2s;
-  cursor: pointer;
-}
-
-.rekening-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-}
-
-.rekening-card.active {
-  border-color: var(--pink);
-  box-shadow: 0 0 0 2px var(--pink-focus);
-}
-
-.rekening-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.rekening-card-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.rekening-card-value {
-  font-size: clamp(16px, 2vw, 22px);
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.rekening-card-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 8px;
-  border-top: 0.5px solid var(--border);
-}
-
-.rekening-card-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-}
-
-.rekening-card-row-label {
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.rekening-card-row-value {
-  font-weight: 600;
-  font-size: 11px;
-}
-
-.rekening-card-toggle {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--pink);
-  text-align: center;
-  padding-top: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-/* Panel transaksi rekening */
-.rekening-panel {
-  margin: 0 1.5rem 1.5rem;
-  background: var(--bg);
-  border: 0.5px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  animation: slideUp 0.25s ease;
-}
-
-.rekening-panel-header {
-  padding: 1rem 1.5rem;
-  border-bottom: 0.5px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--bg-soft);
-}
-
-.rekening-panel-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.rekening-panel-close {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  border-radius: 4px;
-  transition: color 0.15s;
-}
-
-.rekening-panel-close:hover { color: var(--text-primary); }
-    
 .ringkasan-chart-wrap {
   margin: 0 1.5rem 1.5rem;
   background: var(--bg);
@@ -2509,7 +2378,6 @@
   let currentBooking = null; // booking yang sedang dibuka di modal
   let allPengeluaran = [];
   let allPemasukanLain = [];
-  let allMutasi = [];
   let keuanganActiveTab = 'ringkasan';
 
   /* ── Format Helpers ── */
@@ -2689,19 +2557,16 @@
 
         // Pengeluaran — fetch terpisah
        try {
-          const [resPengeluaran, resPemasukanLain, resMutasi] = await Promise.all([
+          const [resPengeluaran, resPemasukanLain] = await Promise.all([
             fetch(APPS_SCRIPT_URL + '?action=getPengeluaran'),
-            fetch(APPS_SCRIPT_URL + '?action=getPemasukanLain'),
-            fetch(APPS_SCRIPT_URL + '?action=getMutasi')
+            fetch(APPS_SCRIPT_URL + '?action=getPemasukanLain')
           ]);
-          const [dataPengeluaran, dataPemasukanLain, dataMutasi] = await Promise.all([
+          const [dataPengeluaran, dataPemasukanLain] = await Promise.all([
             resPengeluaran.json(),
-            resPemasukanLain.json(),
-            resMutasi.json()
+            resPemasukanLain.json()
           ]);
-          if (dataPengeluaran.success)   allPengeluaran   = dataPengeluaran.pengeluaran     || [];
+          if (dataPengeluaran.success)   allPengeluaran   = dataPengeluaran.pengeluaran || [];
           if (dataPemasukanLain.success) allPemasukanLain = dataPemasukanLain.pemasukanLain || [];
-          if (dataMutasi.success)        allMutasi        = dataMutasi.mutasi               || [];
         } catch (errP) {
           console.error('Error loading jurnal:', errP);
           allPengeluaran   = [];
@@ -4522,12 +4387,6 @@ function populateKeuanganFilter() {
     if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
   });
 
-  // Ambil bulan dari mutasi
-  allMutasi.forEach(m => {
-    const d = parseDate(m.tanggal);
-    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
-  });
-
   // Rebuild seluruh dropdown dari awal
   sel.innerHTML = '<option value="">Semua Bulan</option>';
   Array.from(months).sort().reverse().forEach(m => {
@@ -4689,37 +4548,8 @@ pendapatanDiakui += totalPemasukanLainDiakui;
       </div>`;
   }).join('');
 
-// ── Hitung saldo per rekening ──
-  const inBulan = (tanggal) => {
-    if (!bulanFilter) return true;
-    const d = parseDate(tanggal);
-    if (!d) return false;
-    return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
-  };
-
-  // SB
-  const sb_pemasukanLain = filteredPemasukanLain.reduce((s, p) => s + (p.nominal || 0), 0);
-  const sb_mutasiMasuk   = allMutasi.filter(m => m.ke === 'SB' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const sb_mutasiKeluar  = allMutasi.filter(m => m.dari === 'SB' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const sb_pengeluaran   = filteredPengeluaran.filter(p => (p.rekening || 'SB') === 'SB').reduce((s, p) => s + p.nominal, 0);
-  const saldo_sb         = sb_pemasukanLain + sb_mutasiMasuk - sb_mutasiKeluar - sb_pengeluaran;
-
-  // Blu DP
-  const bluDP_masuk      = filteredBookings.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
-  const bluDP_mutasiMasuk  = allMutasi.filter(m => m.ke === 'Blu DP' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const bluDP_mutasiKeluar = allMutasi.filter(m => m.dari === 'Blu DP' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const saldo_bluDP      = bluDP_masuk + bluDP_mutasiMasuk - bluDP_mutasiKeluar;
-
-  // Blu Kas
-  const bluKas_mutasiMasuk  = allMutasi.filter(m => m.ke === 'Blu Kas' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const bluKas_mutasiKeluar = allMutasi.filter(m => m.dari === 'Blu Kas' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const bluKas_pengeluaran  = filteredPengeluaran.filter(p => p.rekening === 'Blu Kas').reduce((s, p) => s + p.nominal, 0);
-  const saldo_bluKas        = bluKas_mutasiMasuk - bluKas_mutasiKeluar - bluKas_pengeluaran;
-
-  const totalKasRekening = saldo_sb + saldo_bluDP + saldo_bluKas;
-  
   // ── Render ke container ──
- document.getElementById('keuanganTable').innerHTML = `
+  document.getElementById('keuanganTable').innerHTML = `
     <div class="ringkasan-scorecards">
 
       <div class="scorecard">
@@ -4727,8 +4557,8 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <div class="scorecard-label">Total Kas di Bank</div>
           <i class="ti ti-building-bank scorecard-icon" style="color:var(--pink);"></i>
         </div>
-        <div class="scorecard-value" style="color:var(--pink);">${fmtRp(totalKasRekening)}</div>
-        <div class="scorecard-sub">Gabungan semua rekening</div>
+        <div class="scorecard-value" style="color:var(--pink);">${fmtRp(totalKas)}</div>
+        <div class="scorecard-sub">Total Saldo Rekening Masuk</div>
       </div>
 
       <div class="scorecard">
@@ -4746,7 +4576,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <i class="ti ti-circle-check scorecard-icon" style="color:#2d5a0a;"></i>
         </div>
         <div class="scorecard-value" style="color:#2d5a0a;">${fmtRp(pendapatanDiakui)}</div>
-        <div class="scorecard-sub">Booking Done + Tips</div>
+        <div class="scorecard-sub">Dari Acara Selesai / Status Lunas & Butuh Team</div>
       </div>
 
       <div class="scorecard">
@@ -4755,7 +4585,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <i class="ti ti-trending-up scorecard-icon" style="color:#2563eb;"></i>
         </div>
         <div class="scorecard-value" style="color:#2563eb;">${fmtRp(proyeksiPelunasan)}</div>
-        <div class="scorecard-sub">Piutang Klien Aktif</div>
+        <div class="scorecard-sub">Piutang Klien Aktif (Belum Lunas)</div>
       </div>
 
       <div class="scorecard">
@@ -4764,7 +4594,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <i class="ti ti-arrow-up-circle scorecard-icon" style="color:#dc2626;"></i>
         </div>
         <div class="scorecard-value" style="color:#dc2626;">${fmtRp(totalPengeluaran)}</div>
-        <div class="scorecard-sub">Semua rekening</div>
+        <div class="scorecard-sub">Beban Biaya Operasional</div>
       </div>
 
       <div class="scorecard">
@@ -4773,116 +4603,9 @@ pendapatanDiakui += totalPemasukanLainDiakui;
           <i class="ti ti-chart-pie scorecard-icon" style="color:${marginColor};"></i>
         </div>
         <div class="scorecard-value" style="color:${marginColor};">${netMargin}%</div>
-        <div class="scorecard-sub">Pendapatan Diakui − Pengeluaran</div>
+        <div class="scorecard-sub">Dari Pendapatan Diakui − Pengeluaran</div>
       </div>
 
-    </div>
-
-    <!-- Scorecard per rekening -->
-    <div style="padding: 0 1.5rem 0.5rem;">
-      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:1rem;display:flex;align-items:center;gap:6px;">
-        <i class="ti ti-credit-card" style="font-size:13px;color:var(--pink);"></i>
-        Posisi Per Rekening
-      </div>
-    </div>
-    <div class="rekening-scorecards">
-
-      <!-- SB -->
-      <div class="rekening-card" id="rek-card-sb" onclick="toggleRekeningPanel('sb')">
-        <div class="rekening-card-header">
-          <div class="rekening-card-label">🏦 Rek SB</div>
-          <i class="ti ti-chevron-down" id="rek-icon-sb" style="font-size:14px;color:var(--text-secondary);transition:transform 0.2s;"></i>
-        </div>
-        <div class="rekening-card-value" style="color:var(--pink);">${fmtRp(saldo_sb)}</div>
-        <div class="rekening-card-rows">
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> Pemasukan Lain</span>
-            <span class="rekening-card-row-value" style="color:#2d5a0a;">${fmtRp(sb_pemasukanLain)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> Mutasi Masuk</span>
-            <span class="rekening-card-row-value" style="color:#2d5a0a;">${fmtRp(sb_mutasiMasuk)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-up" style="font-size:10px;color:#dc2626;"></i> Pengeluaran</span>
-            <span class="rekening-card-row-value" style="color:#dc2626;">${fmtRp(sb_pengeluaran)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-up" style="font-size:10px;color:#dc2626;"></i> Mutasi Keluar</span>
-            <span class="rekening-card-row-value" style="color:#dc2626;">${fmtRp(sb_mutasiKeluar)}</span>
-          </div>
-        </div>
-        <div class="rekening-card-toggle">
-          <i class="ti ti-list" style="font-size:11px;"></i> Lihat Transaksi
-        </div>
-      </div>
-
-      <!-- Blu DP -->
-      <div class="rekening-card" id="rek-card-bludp" onclick="toggleRekeningPanel('bludp')">
-        <div class="rekening-card-header">
-          <div class="rekening-card-label">💙 Rek Blu DP</div>
-          <i class="ti ti-chevron-down" id="rek-icon-bludp" style="font-size:14px;color:var(--text-secondary);transition:transform 0.2s;"></i>
-        </div>
-        <div class="rekening-card-value" style="color:#f59e0b;">${fmtRp(saldo_bluDP)}</div>
-        <div class="rekening-card-rows">
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> DP Masuk</span>
-            <span class="rekening-card-row-value" style="color:#2d5a0a;">${fmtRp(bluDP_masuk)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> Mutasi Masuk</span>
-            <span class="rekening-card-row-value" style="color:#2d5a0a;">${fmtRp(bluDP_mutasiMasuk)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-up" style="font-size:10px;color:#dc2626;"></i> Mutasi Keluar</span>
-            <span class="rekening-card-row-value" style="color:#dc2626;">${fmtRp(bluDP_mutasiKeluar)}</span>
-          </div>
-        </div>
-        <div class="rekening-card-toggle">
-          <i class="ti ti-list" style="font-size:11px;"></i> Lihat Transaksi
-        </div>
-      </div>
-
-      <!-- Blu Kas -->
-      <div class="rekening-card" id="rek-card-blukas" onclick="toggleRekeningPanel('blukas')">
-        <div class="rekening-card-header">
-          <div class="rekening-card-label">💚 Rek Blu Kas</div>
-          <i class="ti ti-chevron-down" id="rek-icon-blukas" style="font-size:14px;color:var(--text-secondary);transition:transform 0.2s;"></i>
-        </div>
-        <div class="rekening-card-value" style="color:#2d5a0a;">${fmtRp(saldo_bluKas)}</div>
-        <div class="rekening-card-rows">
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> Mutasi Masuk</span>
-            <span class="rekening-card-row-value" style="color:#2d5a0a;">${fmtRp(bluKas_mutasiMasuk)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-up" style="font-size:10px;color:#dc2626;"></i> Pengeluaran</span>
-            <span class="rekening-card-row-value" style="color:#dc2626;">${fmtRp(bluKas_pengeluaran)}</span>
-          </div>
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-up" style="font-size:10px;color:#dc2626;"></i> Mutasi Keluar</span>
-            <span class="rekening-card-row-value" style="color:#dc2626;">${fmtRp(bluKas_mutasiKeluar)}</span>
-          </div>
-        </div>
-        <div class="rekening-card-toggle">
-          <i class="ti ti-list" style="font-size:11px;"></i> Lihat Transaksi
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Panel transaksi rekening (ditampilkan saat klik) -->
-    <div id="rekeningPanel" style="display:none;" class="rekening-panel">
-      <div class="rekening-panel-header">
-        <div class="rekening-panel-title">
-          <i class="ti ti-receipt" style="color:var(--pink);font-size:15px;"></i>
-          <span id="rekeningPanelTitle">Transaksi</span>
-        </div>
-        <button class="rekening-panel-close" onclick="closeRekeningPanel()">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-      <div id="rekeningPanelBody"></div>
     </div>
 
     <div class="ringkasan-chart-wrap">
@@ -4903,6 +4626,7 @@ pendapatanDiakui += totalPemasukanLainDiakui;
       <div class="chart-bars">${barsHtml || '<span style="font-size:12px;color:var(--text-secondary);">Belum ada data tren.</span>'}</div>
     </div>
   `;
+}
   
   function renderKeuanganPemasukan(bulanFilter) {
     let rows = allBookings.filter(b => {
@@ -5202,14 +4926,10 @@ document.getElementById('keuanganSummary').innerHTML = `
         document.getElementById('filterKeuanganBulan').value = savedKeuBulan2;
       }
       try {
-        const [resPL, resMT] = await Promise.all([
-          fetch(APPS_SCRIPT_URL + '?action=getPemasukanLain'),
-          fetch(APPS_SCRIPT_URL + '?action=getMutasi')
-        ]);
-        const [dataPL, dataMT] = await Promise.all([resPL.json(), resMT.json()]);
+        const resPL = await fetch(APPS_SCRIPT_URL + '?action=getPemasukanLain');
+        const dataPL = await resPL.json();
         if (dataPL.success) allPemasukanLain = dataPL.pemasukanLain || [];
-        if (dataMT.success) allMutasi        = dataMT.mutasi        || [];
-      } catch(e) { console.warn('Silent refresh jurnal gagal:', e.message); }
+      } catch(e) { console.warn('Silent refresh pemasukan lain gagal:', e.message); }
       
       if (currentPage === 'keuangan') renderKeuangan();
 
@@ -5986,114 +5706,6 @@ function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAd
     if (toggle.checked) input.focus();
     syncAddonField();
   }
-  let activeRekeningPanel = null;
-
-  function closeRekeningPanel() {
-    document.getElementById('rekeningPanel').style.display = 'none';
-    if (activeRekeningPanel) {
-      document.getElementById('rek-card-' + activeRekeningPanel)?.classList.remove('active');
-      const icon = document.getElementById('rek-icon-' + activeRekeningPanel);
-      if (icon) icon.style.transform = 'rotate(0deg)';
-    }
-    activeRekeningPanel = null;
-  }
-
-  function toggleRekeningPanel(rek) {
-    if (activeRekeningPanel === rek) { closeRekeningPanel(); return; }
-    closeRekeningPanel();
-    activeRekeningPanel = rek;
-
-    document.getElementById('rek-card-' + rek)?.classList.add('active');
-    const icon = document.getElementById('rek-icon-' + rek);
-    if (icon) icon.style.transform = 'rotate(180deg)';
-
-    const bulanFilter = document.getElementById('filterKeuanganBulan').value;
-    const inBulan = (tanggal) => {
-      if (!bulanFilter) return true;
-      const d = parseDate(tanggal);
-      if (!d) return false;
-      return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
-    };
-
-    const titles = { sb: 'Rek SB', bludp: 'Blu DP', blukas: 'Blu Kas' };
-    document.getElementById('rekeningPanelTitle').textContent = 'Transaksi ' + titles[rek];
-
-    let rows = [];
-
-    if (rek === 'sb') {
-      allPemasukanLain.filter(p => inBulan(p.tanggal)).forEach(p => {
-        rows.push({ tanggal: p.tanggal, keterangan: p.keterangan, tipe: 'Pemasukan Lain', nominal: p.nominal, arah: 'masuk' });
-      });
-      allMutasi.filter(m => m.ke === 'SB' && inBulan(m.tanggal)).forEach(m => {
-        rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (dari ' + m.dari + ')', tipe: 'Mutasi Masuk', nominal: m.nominal, arah: 'masuk' });
-      });
-      allPengeluaran.filter(p => (p.rekening || 'SB') === 'SB' && inBulan(p.tanggal)).forEach(p => {
-        rows.push({ tanggal: p.tanggal, keterangan: p.keterangan, tipe: 'Pengeluaran', nominal: p.nominal, arah: 'keluar' });
-      });
-      allMutasi.filter(m => m.dari === 'SB' && inBulan(m.tanggal)).forEach(m => {
-        rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (ke ' + m.ke + ')', tipe: 'Mutasi Keluar', nominal: m.nominal, arah: 'keluar' });
-      });
-    }
-
-    if (rek === 'bludp') {
-      allBookings.filter(b => inBulan(b.tanggal)).forEach(b => {
-        const dp = parseRp(b.dp) + parseRp(b.dp2);
-        if (dp > 0) rows.push({ tanggal: b.tanggal, keterangan: 'DP – ' + (b.nama || ''), tipe: 'DP Booking', nominal: dp, arah: 'masuk' });
-      });
-      allMutasi.filter(m => m.ke === 'Blu DP' && inBulan(m.tanggal)).forEach(m => {
-        rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (dari ' + m.dari + ')', tipe: 'Mutasi Masuk', nominal: m.nominal, arah: 'masuk' });
-      });
-      allMutasi.filter(m => m.dari === 'Blu DP' && inBulan(m.tanggal)).forEach(m => {
-        rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (ke ' + m.ke + ')', tipe: 'Mutasi Keluar', nominal: m.nominal, arah: 'keluar' });
-      });
-    }
-
-    if (rek === 'blukas') {
-      allMutasi.filter(m => m.ke === 'Blu Kas' && inBulan(m.tanggal)).forEach(m => {
-        rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (dari ' + m.dari + ')', tipe: 'Mutasi Masuk', nominal: m.nominal, arah: 'masuk' });
-      });
-      allPengeluaran.filter(p => p.rekening === 'Blu Kas' && inBulan(p.tanggal)).forEach(p => {
-        rows.push({ tanggal: p.tanggal, keterangan: p.keterangan, tipe: 'Pengeluaran', nominal: p.nominal, arah: 'keluar' });
-      });
-      allMutasi.filter(m => m.dari === 'Blu Kas' && inBulan(m.tanggal)).forEach(m => {
-        rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (ke ' + m.ke + ')', tipe: 'Mutasi Keluar', nominal: m.nominal, arah: 'keluar' });
-      });
-    }
-
-    rows.sort((a, b) => (parseDate(a.tanggal) || new Date(0)) - (parseDate(b.tanggal) || new Date(0)));
-
-    const body = document.getElementById('rekeningPanelBody');
-    if (rows.length === 0) {
-      body.innerHTML = '<div class="empty-state" style="padding:2rem;"><i class="ti ti-receipt-off" style="font-size:36px;color:var(--border);display:block;margin-bottom:8px;"></i><p>Tidak ada transaksi</p></div>';
-    } else {
-      const tableRows = rows.map(r => `
-        <tr>
-          <td class="date-col" style="white-space:nowrap;">${fmtDate(r.tanggal)}</td>
-          <td>${r.keterangan || '—'}</td>
-          <td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;
-            background:${r.arah === 'masuk' ? 'rgba(45,90,10,0.08)' : 'rgba(220,38,38,0.08)'};
-            color:${r.arah === 'masuk' ? '#2d5a0a' : '#dc2626'};
-            border:0.5px solid ${r.arah === 'masuk' ? 'rgba(45,90,10,0.3)' : 'rgba(220,38,38,0.3)'};">
-            ${r.tipe}
-          </span></td>
-          <td style="font-weight:600;color:${r.arah === 'masuk' ? '#2d5a0a' : '#dc2626'};white-space:nowrap;">
-            ${r.arah === 'masuk' ? '+' : '−'} ${fmtRp(r.nominal)}
-          </td>
-        </tr>`).join('');
-
-      body.innerHTML = `<div style="overflow-x:auto;"><table>
-        <thead><tr>
-          <th>Tanggal</th><th>Keterangan</th><th>Tipe</th><th>Nominal</th>
-        </tr></thead>
-        <tbody>${tableRows}</tbody>
-      </table></div>`;
-    }
-
-    const panel = document.getElementById('rekeningPanel');
-    panel.style.display = 'block';
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-  
 function renderRecentBookings() {
     const container = document.getElementById('recentBookingsTable');
     const section   = document.getElementById('recentBookingsSection');
