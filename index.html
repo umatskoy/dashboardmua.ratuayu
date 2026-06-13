@@ -2672,6 +2672,7 @@ function maskRp(n) {
       hijab_stylist3:  pick('hijab_stylist3', 'hijab stylist3', 'Hijab Stylist 3', 'hijab3'),
       hair_stylist3:   pick('hair_stylist3', 'hair stylist3', 'Hair Stylist 3', 'hair3'),
       notes:           pick('notes', 'Notes', 'catatan', 'Catatan', 'note'),
+      day2:            pick('day2', 'Day2', 'DAY2', 'hari_2'),
       addon_custom:    pick('addon_custom', 'Add On Custom', 'add on custom', 'addoncustom'),
       // simpan semua field asli juga, untuk jaga-jaga
       _raw: raw,
@@ -4080,7 +4081,7 @@ if (booking.bukti) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-   // Build booking map: key = "YYYY-MM-DD" → array of bookings
+  // Build booking map: key = "YYYY-MM-DD" → array of bookings
 const bookingMap = {};
 allBookings.forEach(b => {
   const d = parseDate(b.tanggal);
@@ -4088,6 +4089,16 @@ allBookings.forEach(b => {
   const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   if (!bookingMap[key]) bookingMap[key] = [];
   bookingMap[key].push(b);
+
+  // Day 2 — entri virtual
+  if (b.day2) {
+    const d2 = parseDate(b.day2);
+    if (d2) {
+      const key2 = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0') + '-' + String(d2.getDate()).padStart(2,'0');
+      if (!bookingMap[key2]) bookingMap[key2] = [];
+      bookingMap[key2].push({ ...b, _isDay2: true });
+    }
+  }
 });
 
 // Build blokir map: key = "YYYY-MM-DD" → blokir object
@@ -4169,6 +4180,10 @@ const blokirStyle = blokirInfo
           const hijab = b.hijab_stylist  || '';
           const hair  = b.hair_stylist   || '';
           const label = [jam, mua, hijab, hair].filter(Boolean).join(' · ') || (b.nama || 'Booking');
+
+          if (b._isDay2) {
+            return `<span class="cal-entry" style="background:#fef08a;color:#1a1a1a;font-weight:600;">Day 2 · ${label}</span>`;
+          }
           const st = (b.status || 'pending') === 'confirmed' ? 'confirmed' : 'pending';
           return `<span class="cal-entry ${st}">${label}</span>`;
         }).join('');
@@ -4302,7 +4317,7 @@ if (blokirInfo) {
           ? `<span style="background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">${b.hair_stylist}</span>`
           : `<span style="color:var(--border);font-size:11px;">—</span>`;
         return `<tr onclick="openModal('${encoded}')">
-          <td class="name-col">${b.nama || '-'}</td>
+          <td class="name-col">${b.nama || '-'}${b._isDay2 ? ' <span style="background:#fef08a;color:#1a1a1a;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;">Day 2</span>' : ''}</td>
           <td class="paket-col">${b.paket || '-'}</td>
           <td>${muaLabel}</td>
           <td>${hijabLabel}</td>
