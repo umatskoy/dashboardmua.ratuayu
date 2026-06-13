@@ -4277,6 +4277,18 @@ if (blokirInfo) {
       return key === dateKey;
     });
 
+    const day2OnDate = allBookings
+      .filter(b => {
+        if (!b.day2) return false;
+        const d2 = parseDate(b.day2);
+        if (!d2) return false;
+        const key2 = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0') + '-' + String(d2.getDate()).padStart(2,'0');
+        return key2 === dateKey;
+      })
+      .map(b => ({ ...b, _isDay2: true }));
+
+    const allOnDate = [...bookingsOnDate, ...day2OnDate];
+
     const panel = document.getElementById('calDayBookings');
     const title = document.getElementById('calDayBookingsTitle');
     const body  = document.getElementById('calDayBookingsBody');
@@ -4285,9 +4297,8 @@ if (blokirInfo) {
     const d = new Date(yr, parseInt(mo)-1, parseInt(dy));
     const dateLabel = d.toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
 
-    title.textContent = bookingsOnDate.length + ' Booking — ' + dateLabel;
-
-    if (bookingsOnDate.length === 0) {
+    title.textContent = allOnDate.length + ' Booking — ' + dateLabel;
+    if (allOnDate.length === 0) {
       body.innerHTML = '<div class="empty-state" style="padding:2rem;"><i class="ti ti-calendar-off" style="font-size:36px;color:var(--border);display:block;margin-bottom:8px;"></i><p>Tidak ada booking di tanggal ini</p></div>';
     } else {
 
@@ -4297,9 +4308,9 @@ if (blokirInfo) {
       const [h, m] = s.split(':').map(Number);
       return (h || 0) * 60 + (m || 0);
     };
-    bookingsOnDate.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));      
+    allOnDate.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));      
       
-      let rows = bookingsOnDate.map(b => {
+      let rows = allOnDate.map(b => {
         const total   = parseRp(b.subtotal);
         const dp      = parseRp(b.dp);
         const sisa    = Math.max(0, total - dp);
