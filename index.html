@@ -4735,11 +4735,10 @@ pendapatanDiakui += totalPemasukanLainDiakui;
   const saldo_sb         = sb_pemasukanLain + sb_mutasiMasuk - sb_mutasiKeluar - sb_pengeluaran;
 
   // Blu DP
-  const bluDP_masuk      = filteredBookings.reduce((s, b) => s + parseRp(b.dp) + parseRp(b.dp2), 0);
   const bluDP_mutasiMasuk  = allMutasi.filter(m => m.ke === 'Blu DP' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
   const bluDP_mutasiKeluar = allMutasi.filter(m => m.dari === 'Blu DP' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const saldo_bluDP      = bluDP_masuk + bluDP_mutasiMasuk - bluDP_mutasiKeluar;
-
+  const saldo_bluDP        = bluDP_mutasiMasuk - bluDP_mutasiKeluar;
+  
   // Blu Kas
   const bluKas_mutasiMasuk  = allMutasi.filter(m => m.ke === 'Blu Kas' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
   const bluKas_mutasiKeluar = allMutasi.filter(m => m.dari === 'Blu Kas' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
@@ -4854,10 +4853,6 @@ pendapatanDiakui += totalPemasukanLainDiakui;
         </div>
         <div class="rekening-card-value" style="color:#f59e0b;">${maskRp(saldo_bluDP)}</div>
         <div class="rekening-card-rows">
-          <div class="rekening-card-row">
-            <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> DP Masuk</span>
-            <span class="rekening-card-row-value" style="color:#2d5a0a;">${maskRp(bluDP_masuk)}</span>
-          </div>
           <div class="rekening-card-row">
             <span class="rekening-card-row-label"><i class="ti ti-arrow-down" style="font-size:10px;color:#2d5a0a;"></i> Mutasi Masuk</span>
             <span class="rekening-card-row-value" style="color:#2d5a0a;">${maskRp(bluDP_mutasiMasuk)}</span>
@@ -6067,10 +6062,6 @@ function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAd
     }
 
     if (rek === 'bludp') {
-      allBookings.filter(b => inBulan(b.tanggal)).forEach(b => {
-        const dp = parseRp(b.dp) + parseRp(b.dp2);
-        if (dp > 0) rows.push({ tanggal: b.tanggal, keterangan: 'DP – ' + (b.nama || ''), tipe: 'DP Booking', nominal: dp, arah: 'masuk' });
-      });
       allMutasi.filter(m => m.ke === 'Blu DP' && inBulan(m.tanggal)).forEach(m => {
         rows.push({ tanggal: m.tanggal, keterangan: m.keterangan + ' (dari ' + m.dari + ')', tipe: 'Mutasi Masuk', nominal: m.nominal, arah: 'masuk' });
       });
