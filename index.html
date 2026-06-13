@@ -2672,7 +2672,6 @@ function maskRp(n) {
       hijab_stylist3:  pick('hijab_stylist3', 'hijab stylist3', 'Hijab Stylist 3', 'hijab3'),
       hair_stylist3:   pick('hair_stylist3', 'hair stylist3', 'Hair Stylist 3', 'hair3'),
       notes:           pick('notes', 'Notes', 'catatan', 'Catatan', 'note'),
-      day2:            pick('day2', 'Day2', 'DAY2', 'hari_2'),
       addon_custom:    pick('addon_custom', 'Add On Custom', 'add on custom', 'addoncustom'),
       // simpan semua field asli juga, untuk jaga-jaga
       _raw: raw,
@@ -4082,7 +4081,6 @@ if (booking.bukti) {
     today.setHours(0, 0, 0, 0);
 
    // Build booking map: key = "YYYY-MM-DD" → array of bookings
-// Build booking map: key = "YYYY-MM-DD" → array of bookings
 const bookingMap = {};
 allBookings.forEach(b => {
   const d = parseDate(b.tanggal);
@@ -4090,16 +4088,6 @@ allBookings.forEach(b => {
   const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   if (!bookingMap[key]) bookingMap[key] = [];
   bookingMap[key].push(b);
-
-  // Day 2 — entri virtual
-  if (b.day2) {
-    const d2 = parseDate(b.day2);
-    if (d2) {
-      const key2 = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0') + '-' + String(d2.getDate()).padStart(2,'0');
-      if (!bookingMap[key2]) bookingMap[key2] = [];
-      bookingMap[key2].push({ ...b, _isDay2: true });
-    }
-  }
 });
 
 // Build blokir map: key = "YYYY-MM-DD" → blokir object
@@ -4181,10 +4169,6 @@ const blokirStyle = blokirInfo
           const hijab = b.hijab_stylist  || '';
           const hair  = b.hair_stylist   || '';
           const label = [jam, mua, hijab, hair].filter(Boolean).join(' · ') || (b.nama || 'Booking');
-
-          if (b._isDay2) {
-            return `<span class="cal-entry" style="background:#fef08a;color:#1a1a1a;font-weight:600;">Day 2 · ${label}</span>`;
-          }
           const st = (b.status || 'pending') === 'confirmed' ? 'confirmed' : 'pending';
           return `<span class="cal-entry ${st}">${label}</span>`;
         }).join('');
@@ -4271,27 +4255,12 @@ if (blokirInfo) {
   function calDayClick(event, dateKey, encodedBookings) {
     calHidePopover();
 
-    // Booking dengan tanggal utama
-    // Booking dengan tanggal utama
     const bookingsOnDate = allBookings.filter(b => {
       const d = parseDate(b.tanggal);
       if (!d) return false;
       const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
       return key === dateKey;
     });
-
-    // Tambahkan entri Day 2 yang jatuh di tanggal ini
-    const day2OnDate = allBookings
-      .filter(b => {
-        if (!b.day2) return false;
-        const d2 = parseDate(b.day2);
-        if (!d2) return false;
-        const key2 = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0') + '-' + String(d2.getDate()).padStart(2,'0');
-        return key2 === dateKey;
-      })
-      .map(b => ({ ...b, _isDay2: true }));
-
-    const allOnDate = [...bookingsOnDate, ...day2OnDate];
 
     const panel = document.getElementById('calDayBookings');
     const title = document.getElementById('calDayBookingsTitle');
@@ -4301,9 +4270,8 @@ if (blokirInfo) {
     const d = new Date(yr, parseInt(mo)-1, parseInt(dy));
     const dateLabel = d.toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
 
-    title.textContent = allOnDate.length + ' Booking — ' + dateLabel;
+    title.textContent = bookingsOnDate.length + ' Booking — ' + dateLabel;
 
-    if (allOnDate.length === 0) {
     if (bookingsOnDate.length === 0) {
       body.innerHTML = '<div class="empty-state" style="padding:2rem;"><i class="ti ti-calendar-off" style="font-size:36px;color:var(--border);display:block;margin-bottom:8px;"></i><p>Tidak ada booking di tanggal ini</p></div>';
     } else {
@@ -4314,9 +4282,9 @@ if (blokirInfo) {
       const [h, m] = s.split(':').map(Number);
       return (h || 0) * 60 + (m || 0);
     };
-    allOnDate.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));      
+    bookingsOnDate.sort((a, b) => parseJam(a.jam_selesai) - parseJam(b.jam_selesai));      
       
-      let rows = allOnDate.map(b => {
+      let rows = bookingsOnDate.map(b => {
         const total   = parseRp(b.subtotal);
         const dp      = parseRp(b.dp);
         const sisa    = Math.max(0, total - dp);
@@ -4334,7 +4302,7 @@ if (blokirInfo) {
           ? `<span style="background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">${b.hair_stylist}</span>`
           : `<span style="color:var(--border);font-size:11px;">—</span>`;
         return `<tr onclick="openModal('${encoded}')">
-          <td class="name-col">${b.nama || '-'}${b._isDay2 ? ' <span style="background:#fef08a;color:#1a1a1a;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;">Day 2</span>' : ''}</td>
+          <td class="name-col">${b.nama || '-'}</td>
           <td class="paket-col">${b.paket || '-'}</td>
           <td>${muaLabel}</td>
           <td>${hijabLabel}</td>
