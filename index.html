@@ -2500,6 +2500,10 @@
           <span class="edit-ringkasan-value" id="er_addon">—</span>
         </div>
         <div class="edit-ringkasan-row">
+          <span class="edit-ringkasan-label">Add On Custom</span>
+          <span class="edit-ringkasan-value" id="er_addoncustom">—</span>
+        </div>
+        <div class="edit-ringkasan-row">
           <span class="edit-ringkasan-label">Transport</span>
           <span class="edit-ringkasan-value" id="er_transport">—</span>
         </div>
@@ -3937,15 +3941,15 @@ if (booking.bukti) {
           <input type="number" id="ef_subtotal" value="${parseRp(b.subtotal) || ''}" placeholder="0"
             readonly style="background:var(--bg-soft);color:var(--text-secondary);cursor:not-allowed;">
         </div>
-        <div class="edit-field">
+       <div class="edit-field">
           <label>DP (Rp)</label>
-          <input type="number" id="ef_dp" value="${parseRp(b.dp) || ''}" placeholder="0" oninput="updateRingkasan(parseRp(document.getElementById('ef_subtotal').value), 0, 0, '', [])">
+          <input type="number" id="ef_dp" value="${parseRp(b.dp) || ''}" placeholder="0" oninput="hitungSubtotal()">
       </div>
       </div>
       <div class="edit-fields-row">
         <div class="edit-field">
           <label>DP ke-2 (Rp) <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
-          <input type="number" id="ef_dp2" value="${parseRp(b.dp2) || ''}" placeholder="0" oninput="updateRingkasan(parseRp(document.getElementById('ef_subtotal').value), 0, 0, '', [])">
+          <input type="number" id="ef_dp2" value="${parseRp(b.dp2) || ''}" placeholder="0" oninput="hitungSubtotal()">
         </div>
       </div>
       <div class="edit-field">
@@ -5962,7 +5966,6 @@ function hitungSubtotal() {
   });
 
   namaPaket = namaPaketParts.length ? namaPaketParts.join(' + ') : '—';
-  const adaSatupunPaketDipilih = namaPaketParts.length > 0;
 
   let hargaAddon = 0;
   let namaAddonParts = [];
@@ -5981,34 +5984,46 @@ function hitungSubtotal() {
       }
     }
   });
+
   // Add on custom
   let hargaAddonCustom = 0;
+  let namaAddonCustomParts = [];
   document.querySelectorAll('#ef_addoncustom_rows .addoncustom-row').forEach(row => {
-    const idx   = row.dataset.idx;
-    const sel   = row.querySelector('.addoncustom-select');
-    const qtyEl = document.getElementById('addoncustom_qty_' + idx);
-    const qty   = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
-    if (sel && sel.value && sel.value !== '__manual__') {
-      const addonData = allAddOnCustom.find(a => a.nama === sel.value);
-      if (addonData) hargaAddonCustom += Number(addonData.harga) * qty;
+    const idx    = row.dataset.idx;
+    const sel    = row.querySelector('.addoncustom-select');
+    const manual = document.querySelector(`.addoncustom-manual[data-idx="${idx}"]`);
+    const input  = row.querySelector('.addoncustom-input');
+    const qtyEl  = document.getElementById('addoncustom_qty_' + idx);
+    const qty    = qtyEl ? parseInt(qtyEl.dataset.qty) || 1 : 1;
+
+    if (input) {
+      const val = input.value.trim();
+      if (val) namaAddonCustomParts.push(val + (qty > 1 ? ' x' + qty : ''));
+    } else if (sel) {
+      if (sel.value === '__manual__') {
+        const val = manual ? manual.value.trim() : '';
+        if (val) namaAddonCustomParts.push(val + (qty > 1 ? ' x' + qty : ''));
+      } else if (sel.value) {
+        const addonData = allAddOnCustom.find(a => a.nama === sel.value);
+        if (addonData) {
+          hargaAddonCustom += Number(addonData.harga) * qty;
+          namaAddonCustomParts.push(addonData.nama + (qty > 1 ? ' x' + qty : ''));
+        }
+      }
     }
   });
+
   const transportInput = document.getElementById('ef_transport');
   const hargaTransport = transportInput ? parseRp(transportInput.value) : 0;
-
-  if (!adaSatupunPaketDipilih) {
-    updateRingkasan(null, hargaAddon, hargaTransport, namaPaket, namaAddonParts);
-    return;
-  }
 
   const total = hargaPaket + hargaAddon + hargaAddonCustom + hargaTransport;
   const subtotalInput = document.getElementById('ef_subtotal');
   if (subtotalInput) subtotalInput.value = total;
 
-  updateRingkasan(total, hargaAddon, hargaTransport, namaPaket, namaAddonParts);
+  updateRingkasan(total, hargaAddon, hargaTransport, namaPaket, namaAddonParts, namaAddonCustomParts);
 }
 
-function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAddonParts) {
+function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAddonParts, namaAddonCustomParts) {
   const dpInput  = document.getElementById('ef_dp');
   const dp2Input = document.getElementById('ef_dp2');
   const dp  = dpInput  ? parseRp(dpInput.value)  : 0;
@@ -6016,12 +6031,13 @@ function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAd
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-  set('er_paket',    namaPaket || '—');
-  set('er_addon',    namaAddonParts && namaAddonParts.length ? namaAddonParts.join(', ') : '—');
-  set('er_transport', hargaTransport > 0 ? fmtRp(hargaTransport) : '—');
-  set('er_subtotal',  subtotal !== null ? fmtRp(subtotal) : '—');
-  set('er_dp',        dp  > 0 ? fmtRp(dp)  : '—');
-  set('er_dp2',       dp2 > 0 ? fmtRp(dp2) : '—');
+  set('er_paket',       namaPaket || '—');
+  set('er_addon',       namaAddonParts && namaAddonParts.length ? namaAddonParts.join(', ') : '—');
+  set('er_addoncustom', namaAddonCustomParts && namaAddonCustomParts.length ? namaAddonCustomParts.join(', ') : '—');
+  set('er_transport',   hargaTransport > 0 ? fmtRp(hargaTransport) : '—');
+  set('er_subtotal',    subtotal !== null ? fmtRp(subtotal) : '—');
+  set('er_dp',          dp  > 0 ? fmtRp(dp)  : '—');
+  set('er_dp2',         dp2 > 0 ? fmtRp(dp2) : '—');
 
   const sisa = subtotal !== null ? Math.max(0, subtotal - dp - dp2) : null;
   const sisaEl = document.getElementById('er_sisa');
