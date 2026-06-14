@@ -372,8 +372,23 @@
       outline: none;
     }
 
-    .filter-group select:hover { border-color: var(--pink); }
+   .filter-group select:hover { border-color: var(--pink); }
     .filter-group select:focus { border-color: var(--pink); box-shadow: 0 0 0 2px var(--pink-focus); }
+
+    .filter-group input[type="text"] {
+      padding: 8px 12px;
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .filter-group input[type="text"]:hover { border-color: var(--pink); }
+    .filter-group input[type="text"]:focus { border-color: var(--pink); box-shadow: 0 0 0 2px var(--pink-focus); }
 
     .btn-refresh {
       display: flex;
@@ -2198,6 +2213,10 @@
         <span class="topbar-title" id="topbarTitle">Dashboard</span>
       </div>
       <div class="topbar-right" id="topbarRight">
+        <div class="filter-group" id="filterGroupSearch">
+          <label for="searchNama">Cari:</label>
+          <input type="text" id="searchNama" placeholder="Cari nama..." oninput="onSearchNamaInput()" style="min-width:160px;">
+        </div>
         <div class="filter-group" id="filterGroupMonth">
           <label for="filterMonth">Bulan:</label>
           <select id="filterMonth" onchange="filterBookings()">
@@ -2527,6 +2546,7 @@
   let allMutasi = [];
   let keuanganActiveTab = 'ringkasan';
   let nominalHidden = false;
+  let searchNamaQuery = '';
 
 function toggleNominal() {
   nominalHidden = !nominalHidden;
@@ -2837,6 +2857,10 @@ function maskRp(n) {
 
       if (muaFilter) {
         match = match && (b.mua_bertugas === muaFilter || b.mua_bertugas_2 === muaFilter);
+      }
+
+      if (searchNamaQuery) {
+        match = match && (b.nama || '').toLowerCase().includes(searchNamaQuery);
       }
 
       return match;
@@ -4361,7 +4385,7 @@ if (blokirInfo) {
   }
 
   function updateFilterVisibility() {
-    const ids = ['filterGroupMonth','filterGroupPaket','filterGroupMUA','filterGroupStatus'];
+    const ids = ['filterGroupMonth','filterGroupPaket','filterGroupMUA','filterGroupStatus','filterGroupSearch'];
     ids.forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -4376,6 +4400,28 @@ if (blokirInfo) {
     if (btn) {
       btn.style.borderColor = filterVisible ? 'var(--pink)' : 'var(--border)';
       btn.style.color       = filterVisible ? 'var(--pink)' : 'var(--text-secondary)';
+    }
+  }
+
+  /* ── Search Nama (Daftar Booking & Keuangan) ── */
+  function onSearchNamaInput() {
+    searchNamaQuery = document.getElementById('searchNama').value.trim().toLowerCase();
+    if (currentPage === 'daftar') {
+      filterBookings();
+    } else if (currentPage === 'keuangan') {
+      renderKeuangan();
+    }
+  }
+
+  function updateSearchVisibility() {
+    const fg = document.getElementById('filterGroupSearch');
+    if (!fg) return;
+    if (currentPage === 'daftar') {
+      fg.style.display = '';
+    } else if (currentPage === 'keuangan' && keuanganActiveTab === 'pemasukan') {
+      fg.style.display = '';
+    } else {
+      fg.style.display = 'none';
     }
   }
   function switchPage(page) {
@@ -4411,6 +4457,7 @@ if (blokirInfo) {
     // Reset filter visibility setiap pindah halaman
     filterVisible = true;
     updateFilterVisibility();
+    updateSearchVisibility();
 
     const pageDaftar   = document.getElementById('page-daftar');
     const pageKalender = document.getElementById('page-kalender');
@@ -4574,6 +4621,7 @@ function switchKeuanganTab(tab) {
   document.getElementById('tab-pemasukan').classList.toggle('active',       tab === 'pemasukan');
   document.getElementById('tab-pengeluaran').classList.toggle('active',     tab === 'pengeluaran');
   document.getElementById('tab-pemasukan-lain').classList.toggle('active',  tab === 'pemasukan-lain');
+  updateSearchVisibility();
   renderKeuangan();
 }
 
@@ -4937,6 +4985,10 @@ pendapatanDiakui += totalPemasukanLainDiakui;
       const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
       return key === bulanFilter;
     });
+
+    if (searchNamaQuery) {
+      rows = rows.filter(b => (b.nama || '').toLowerCase().includes(searchNamaQuery));
+    }
    const parseJam = (jam) => {
       if (!jam || jam === '-') return 9999;
       const s = jam.toString().replace('.', ':');
