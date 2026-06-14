@@ -5418,11 +5418,20 @@ document.getElementById('keuanganSummary').innerHTML = `
     txt('RINCIAN LAYANAN', MARGIN, y, { bold: true, size: 8, color: PINK });
     y += 5;
 
+   // Definisi posisi kolom
+    const colKategoriX = MARGIN + 3;      // Kategori
+    const colItemX     = MARGIN + 32;     // Item
+    const colQtyX      = MARGIN + 108;    // Qty (center)
+    const colHargaX    = MARGIN + 145;    // Harga /pax (right)
+    const colTotalX    = W - MARGIN - 3;  // Total Harga (right)
+
     // Header tabel
     fillRect(MARGIN, y - 4.5, CONTENT_W, 7, PINK);
-    txt('Kategori',    MARGIN + 3,         y, { bold: true, size: 8, color: WHITE });
-    txt('Item',        MARGIN + 35,        y, { bold: true, size: 8, color: WHITE });
-    txt('Harga',       W - MARGIN - 3,     y, { bold: true, size: 8, color: WHITE, align: 'right' });
+    txt('Kategori',    colKategoriX, y, { bold: true, size: 8, color: WHITE });
+    txt('Item',        colItemX,     y, { bold: true, size: 8, color: WHITE });
+    txt('Qty',         colQtyX,      y, { bold: true, size: 8, color: WHITE, align: 'center' });
+    txt('Harga/pax',   colHargaX,    y, { bold: true, size: 8, color: WHITE, align: 'right' });
+    txt('Total Harga', colTotalX,    y, { bold: true, size: 8, color: WHITE, align: 'right' });
     y += 5;
 
     const parseItems = (raw) => {
@@ -5431,26 +5440,59 @@ document.getElementById('keuanganSummary').innerHTML = `
       return (s.includes('|') ? s.split('|') : s.split(',')).map(x => x.trim()).filter(Boolean);
     };
 
+    // Pecah satu item string jadi { nama, qty, hargaPax, total, hasPrice }
+    const parseItemDetail = (item, isAddon) => {
+      const clean = item.replace(/Rp\s*([\d.,]+)/g, (_, n) =>
+        'Rp ' + parseInt(n.replace(/[.,]/g,'')).toLocaleString('id-ID'));
+
+      // Format: "Nama – Rp X x{qty}[ orang]"
+      const m = clean.match(/^(.+?)\s*[–\-]\s*Rp\s*([\d.,]+)\s*x(\d+)(\s*orang)?\s*$/i);
+      if (m) {
+        const nama  = m[1].trim();
+        const harga = parseInt(m[2].replace(/[.,]/g, '')) || 0;
+        const qty   = parseInt(m[3]) || 1;
+        let hargaPax, total;
+        if (isAddon) {
+          // Add On / Add On Custom: harga di string sudah TOTAL
+          total    = harga;
+          hargaPax = qty > 0 ? Math.round(total / qty) : total;
+        } else {
+          // Paket: harga di string adalah harga per pax
+          hargaPax = harga;
+          total    = hargaPax * qty;
+        }
+        return { nama, qty, hargaPax, total, hasPrice: true };
+      }
+
+      // Tanpa harga — coba ambil qty dari "x{n}" di akhir
+      const mQty = clean.match(/^(.+?)\s*x(\d+)(\s*orang)?\s*$/i);
+      if (mQty) {
+        return { nama: mQty[1].trim(), qty: parseInt(mQty[2]) || 1, hargaPax: 0, total: 0, hasPrice: false };
+      }
+      return { nama: clean, qty: 1, hargaPax: 0, total: 0, hasPrice: false };
+    };
+
     let rowAlt = false;
 
     const drawRow = (kategori, items, isAddon) => {
       items.forEach((item, i) => {
         if (rowAlt) fillRect(MARGIN, y - 4, CONTENT_W, 6.5, LGRAY);
-        txt(i === 0 ? kategori : '', MARGIN + 3, y, { size: 7.5, color: GRAY, bold: i === 0 });
+        txt(i === 0 ? kategori : '', colKategoriX, y, { size: 7.5, color: GRAY, bold: i === 0 });
 
-        const clean = item.replace(/Rp\s*([\d.,]+)/g, (_, n) =>
-          'Rp ' + parseInt(n.replace(/[.,]/g,'')).toLocaleString('id-ID'));
+        const { nama, qty, hargaPax, total, hasPrice } = parseItemDetail(item, isAddon);
+        const wl = doc.splitTextToSize(nama, 62);
+        txt(wl[0], colItemX, y, { size: 7.5 });
 
-        const m = clean.match(/^(.+?)\s*[–\-]\s*(Rp[\s\d.,]+)\s*(x\d+.*)$/i);
-        if (m) {
-          txt(m[1].trim() + '  ' + m[3].trim(), MARGIN + 35, y, { size: 7.5 });
-          txt(m[2].trim(), W - MARGIN - 3, y, { size: 7.5, align: 'right', color: isAddon ? GRAY : DARK });
+        txt(String(qty), colQtyX, y, { size: 7.5, align: 'center', color: GRAY });
+        if (hasPrice) {
+          txt(rp(hargaPax), colHargaX, y, { size: 7.5, align: 'right', color: GRAY });
+          txt(rp(total),    colTotalX, y, { size: 7.5, align: 'right', color: isAddon ? GRAY : DARK });
         } else {
-          const wl = doc.splitTextToSize(clean, CONTENT_W - 55);
-          txt(wl[0], MARGIN + 35, y, { size: 7.5 });
-          txt('—', W - MARGIN - 3, y, { size: 7.5, align: 'right', color: GRAY });
-          if (wl.length > 1) { y += 4.5; txt(wl[1], MARGIN + 35, y, { size: 7.5 }); }
+          txt('—', colHargaX, y, { size: 7.5, align: 'right', color: GRAY });
+          txt('—', colTotalX, y, { size: 7.5, align: 'right', color: GRAY });
         }
+
+        if (wl.length > 1) { y += 4.5; txt(wl[1], colItemX, y, { size: 7.5 }); }
         y += 6;
         rowAlt = !rowAlt;
       });
@@ -5465,12 +5507,13 @@ document.getElementById('keuanganSummary').innerHTML = `
     const transport = parseRp(b.transport_biaya);
     if (transport > 0) {
       if (rowAlt) fillRect(MARGIN, y - 4, CONTENT_W, 6.5, LGRAY);
-      txt('Transport', MARGIN + 3,  y, { size: 7.5, color: GRAY });
-      txt('Biaya Transport', MARGIN + 35, y, { size: 7.5 });
-      txt(rp(transport), W - MARGIN - 3, y, { size: 7.5, align: 'right' });
+      txt('Transport', colKategoriX,  y, { size: 7.5, color: GRAY });
+      txt('Biaya Transport', colItemX, y, { size: 7.5 });
+      txt('-', colQtyX, y, { size: 7.5, align: 'center', color: GRAY });
+      txt('—', colHargaX, y, { size: 7.5, align: 'right', color: GRAY });
+      txt(rp(transport), colTotalX, y, { size: 7.5, align: 'right' });
       y += 6;
     }
-
     // ── PEMBAYARAN ──
     y += 3; hline(y); y += 6;
     txt('RINGKASAN PEMBAYARAN', MARGIN, y, { bold: true, size: 8, color: PINK });
