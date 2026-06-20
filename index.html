@@ -4786,10 +4786,11 @@ pendapatanDiakui += totalPemasukanLainDiakui;
   const sb_pengeluaran   = filteredPengeluaran.filter(p => (p.rekening || 'SB') === 'SB').reduce((s, p) => s + p.nominal, 0);
   const saldo_sb         = sb_pemasukanLain + sb_mutasiMasuk - sb_mutasiKeluar - sb_pengeluaran;
 
-  // Blu DP
+ // Blu DP
   const bluDP_mutasiMasuk  = allMutasi.filter(m => m.ke === 'Blu DP' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
   const bluDP_mutasiKeluar = allMutasi.filter(m => m.dari === 'Blu DP' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
-  const saldo_bluDP        = bluDP_mutasiMasuk - bluDP_mutasiKeluar;
+  const bluDP_pengeluaran  = filteredPengeluaran.filter(p => p.rekening === 'Blu DP').reduce((s, p) => s + p.nominal, 0);
+  const saldo_bluDP        = bluDP_mutasiMasuk - bluDP_mutasiKeluar - bluDP_pengeluaran;
   
   // Blu Kas
   const bluKas_mutasiMasuk  = allMutasi.filter(m => m.ke === 'Blu Kas' && inBulan(m.tanggal)).reduce((s, m) => s + m.nominal, 0);
