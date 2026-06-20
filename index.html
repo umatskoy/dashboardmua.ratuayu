@@ -5170,7 +5170,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         <tbody>${tableRows}</tbody>
       </table>`;
   }
-  function renderKeuanganPengeluaran(bulanFilter) {
+ function renderKeuanganPengeluaran(bulanFilter) {
     let rows = allPengeluaran.filter(p => {
       if (!bulanFilter) return true;
       const d = parseDate(p.tanggal);
@@ -5209,10 +5209,25 @@ document.getElementById('keuanganSummary').innerHTML = `
       return;
     }
 
+    const badgeKategori = (kategori) => kategori
+      ? `<span style="background:rgba(124,58,237,0.08);color:#7c3aed;border:0.5px solid rgba(124,58,237,0.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;">${kategori}</span>`
+      : `<span style="color:var(--border);font-size:11px;">—</span>`;
+
+    const badgeTeam = (team) => team
+      ? `<span style="background:var(--pink-light);color:var(--pink);border:0.5px solid rgba(212,83,126,0.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;">${team}</span>`
+      : `<span style="color:var(--border);font-size:11px;">—</span>`;
+
+    const badgeRekening = (rekening) => rekening
+      ? `<span style="background:rgba(37,99,235,0.08);color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;">${rekening}</span>`
+      : `<span style="color:var(--border);font-size:11px;">—</span>`;
+
     const tableRows = rows.map(p => {
       return `<tr>
         <td class="date-col" style="white-space:nowrap;">${fmtDate(p.tanggal)}</td>
         <td>${p.keterangan || '—'}</td>
+        <td>${badgeKategori(p.kategori)}</td>
+        <td>${badgeTeam(p.team)}</td>
+        <td>${badgeRekening(p.rekening)}</td>
         <td class="price-col" style="color:#dc2626;">${fmtRp(p.nominal)}</td>
       </tr>`;
     }).join('');
@@ -5222,12 +5237,14 @@ document.getElementById('keuanganSummary').innerHTML = `
         <thead><tr>
           <th>Tanggal</th>
           <th>Keterangan</th>
+          <th>Kategori</th>
+          <th>Team</th>
+          <th>Rekening</th>
           <th>Nominal</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>`;
   }
-
   /* ── Silent Refresh (background, tanpa spinner) ── */
   async function silentRefresh() {
     try {
