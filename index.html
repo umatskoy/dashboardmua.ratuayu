@@ -1013,6 +1013,94 @@
     .btn-save-edit:hover { background: #bf4570; }
     .btn-save-edit:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    .btn-tambah-pengeluaran {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--pink);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-tambah-pengeluaran:hover { background: #bf4570; }
+
+    .pengeluaran-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1200;
+      animation: fadeIn 0.2s;
+    }
+    .pengeluaran-modal-overlay.show { display: flex; align-items: center; justify-content: center; }
+
+    .pengeluaran-modal-content {
+      background: var(--bg);
+      border-radius: 12px;
+      max-width: 460px;
+      width: 92%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s;
+    }
+
+    .pengeluaran-modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 1;
+    }
+
+    .pengeluaran-modal-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pengeluaran-modal-body { padding: 1.5rem; }
+
+    .pengeluaran-modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 0.5px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      position: sticky;
+      bottom: 0;
+      background: var(--bg);
+    }
+
+    .btn-delete-pengeluaran {
+      padding: 8px 14px;
+      border: 0.5px solid rgba(220,38,38,0.4);
+      background: transparent;
+      color: #dc2626;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-delete-pengeluaran:hover { background: rgba(220,38,38,0.08); }
+    
     /* Toast notif */
     .toast {
       position: fixed;
@@ -2417,7 +2505,12 @@
     <div class="bookings-section">
       <div class="bookings-header">
         <h2>Laporan Keuangan</h2>
-        <span class="bookings-count" id="keuanganCount">0 transaksi</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn-tambah-pengeluaran" id="btnTambahPengeluaran" onclick="openAddPengeluaranModal()" style="display:none;">
+            <i class="ti ti-plus" style="font-size:14px;"></i> Tambah Pengeluaran
+          </button>
+          <span class="bookings-count" id="keuanganCount">0 transaksi</span>
+        </div>
       </div>
       <!-- Tab -->
       <div class="keuangan-tabs">
@@ -2537,6 +2630,32 @@
 </div>
 
 <!-- Toast -->
+<!-- Modal Pengeluaran (Tambah/Edit) -->
+<div class="pengeluaran-modal-overlay" id="pengeluaranModalOverlay">
+  <div class="pengeluaran-modal-content" onclick="event.stopPropagation()">
+    <div class="pengeluaran-modal-header">
+      <h3><i class="ti ti-receipt-2" style="color:var(--pink);font-size:16px;"></i> <span id="pengeluaranModalTitle">Tambah Pengeluaran</span></h3>
+      <button class="btn-close" onclick="closePengeluaranModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="pengeluaran-modal-body" id="pengeluaranModalBody">
+      <!-- Form dinamis -->
+    </div>
+    <div class="pengeluaran-modal-footer">
+      <button class="btn-delete-pengeluaran" id="btnDeletePengeluaran" onclick="deletePengeluaranData()" style="display:none;">
+        <i class="ti ti-trash" style="font-size:13px;"></i> Hapus
+      </button>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn-cancel-edit" onclick="closePengeluaranModal()">Batal</button>
+        <button class="btn-save-edit" id="btnSavePengeluaran" onclick="savePengeluaran()">
+          <i class="ti ti-device-floppy" style="font-size:13px;"></i>
+          <span id="btnSavePengeluaranText">Simpan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2548,6 +2667,8 @@
   let allPengeluaran = [];
   let allPemasukanLain = [];
   let allMutasi = [];
+  let allKategoriPengeluaran = [];
+  let currentPengeluaran = null; // baris pengeluaran yang sedang diedit
   let keuanganActiveTab = 'ringkasan';
   let nominalHidden = false;
   let searchNamaQuery = '';
@@ -2752,7 +2873,10 @@ function maskRp(n) {
             resPemasukanLain.json(),
             resMutasi.json()
           ]);
-          if (dataPengeluaran.success)   allPengeluaran   = dataPengeluaran.pengeluaran     || [];
+        if (dataPengeluaran.success) {
+            allPengeluaran         = dataPengeluaran.pengeluaran || [];
+            allKategoriPengeluaran = dataPengeluaran.kategoriPengeluaran || [];
+          }
           if (dataPemasukanLain.success) allPemasukanLain = dataPemasukanLain.pemasukanLain || [];
           if (dataMutasi.success)        allMutasi        = dataMutasi.mutasi               || [];
         } catch (errP) {
@@ -4476,11 +4600,13 @@ if (blokirInfo) {
     if (page === 'kalender') renderCalendar();
     if (page === 'kinerja')  renderKinerja();
     if (page === 'dashboard') renderRecentBookings();
-    if (page === 'keuangan') {
+   if (page === 'keuangan') {
   keuanganActiveTab = 'ringkasan';
   document.getElementById('tab-ringkasan').classList.add('active');
   document.getElementById('tab-pemasukan').classList.remove('active');
   document.getElementById('tab-pengeluaran').classList.remove('active');
+  const btnTambah = document.getElementById('btnTambahPengeluaran');
+  if (btnTambah) btnTambah.style.display = 'none';
   renderKeuangan();
 }
 
@@ -4562,6 +4688,172 @@ function toggleSidebar() {
 }
 
   /* ══════════════════════════════════════════════
+     PENGELUARAN — TAMBAH / EDIT / HAPUS
+  ══════════════════════════════════════════════ */
+  function dateToInputValuePengeluaran(val) {
+    const d = parseDate(val);
+    if (!d) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function buildPengeluaranForm(p) {
+    const data = p || { tanggal: '', keterangan: '', nominal: '', kategori: '', team: '', rekening: '' };
+    const tglVal = data.tanggal ? dateToInputValuePengeluaran(data.tanggal) : dateToInputValuePengeluaran(new Date());
+
+    const kategoriOptions = allKategoriPengeluaran.map(k =>
+      `<option value="${k}" ${data.kategori === k ? 'selected' : ''}>${k}</option>`
+    ).join('');
+
+    const teamOptions = allTeam.map(t =>
+      `<option value="${t.nama}" ${data.team === t.nama ? 'selected' : ''}>${t.nama} (${t.role})</option>`
+    ).join('');
+
+    const rekeningList = ['SB', 'Blu Kas', 'Blu DP'];
+    const rekeningOptions = rekeningList.map(r =>
+      `<option value="${r}" ${(data.rekening || 'SB') === r ? 'selected' : ''}>${r}</option>`
+    ).join('');
+
+    return `
+      <div class="edit-field">
+        <label>Tanggal</label>
+        <input type="date" id="pf_tanggal" value="${tglVal}">
+      </div>
+      <div class="edit-field">
+        <label>Keterangan</label>
+        <input type="text" id="pf_keterangan" value="${data.keterangan || ''}" placeholder="Misal: Beli bahan makeup">
+      </div>
+      <div class="edit-field">
+        <label>Nominal (Rp)</label>
+        <input type="number" id="pf_nominal" value="${parseRp(data.nominal) || ''}" placeholder="0">
+      </div>
+      <div class="edit-field">
+        <label>Kategori</label>
+        <select id="pf_kategori">
+          <option value="">— Pilih Kategori —</option>
+          ${kategoriOptions}
+          ${data.kategori && !allKategoriPengeluaran.includes(data.kategori) ? `<option value="${data.kategori}" selected>${data.kategori}</option>` : ''}
+        </select>
+      </div>
+      <div class="edit-field">
+        <label>Team <span style="font-size:10px;color:var(--text-secondary);font-weight:400;">(opsional)</span></label>
+        <select id="pf_team">
+          <option value="">— Pilih Team —</option>
+          ${teamOptions}
+          ${data.team && !allTeam.find(t => t.nama === data.team) ? `<option value="${data.team}" selected>${data.team}</option>` : ''}
+        </select>
+      </div>
+      <div class="edit-field">
+        <label>Rekening</label>
+        <select id="pf_rekening">
+          ${rekeningOptions}
+        </select>
+      </div>
+    `;
+  }
+
+  function openAddPengeluaranModal() {
+    currentPengeluaran = null;
+    document.getElementById('pengeluaranModalTitle').textContent = 'Tambah Pengeluaran';
+    document.getElementById('pengeluaranModalBody').innerHTML = buildPengeluaranForm(null);
+    document.getElementById('btnDeletePengeluaran').style.display = 'none';
+    document.getElementById('pengeluaranModalOverlay').classList.add('show');
+  }
+
+  function openEditPengeluaranModal(encodedData) {
+    const p = JSON.parse(decodeURIComponent(encodedData));
+    currentPengeluaran = p;
+    document.getElementById('pengeluaranModalTitle').textContent = 'Edit Pengeluaran';
+    document.getElementById('pengeluaranModalBody').innerHTML = buildPengeluaranForm(p);
+    document.getElementById('btnDeletePengeluaran').style.display = 'inline-flex';
+    document.getElementById('pengeluaranModalOverlay').classList.add('show');
+  }
+
+  function closePengeluaranModal() {
+    document.getElementById('pengeluaranModalOverlay').classList.remove('show');
+    currentPengeluaran = null;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('pengeluaranModalOverlay');
+    if (overlay) {
+      overlay.addEventListener('click', function(e) {
+        if (e.target === this) closePengeluaranModal();
+      });
+    }
+  });
+
+  async function savePengeluaran() {
+    const tanggal    = document.getElementById('pf_tanggal').value;
+    const keterangan = document.getElementById('pf_keterangan').value.trim();
+    const nominal    = document.getElementById('pf_nominal').value;
+    const kategori   = document.getElementById('pf_kategori').value;
+    const team       = document.getElementById('pf_team').value;
+    const rekening   = document.getElementById('pf_rekening').value;
+
+    if (!tanggal)    { showToast('Tanggal wajib diisi', 'error'); return; }
+    if (!keterangan) { showToast('Keterangan wajib diisi', 'error'); return; }
+    if (!nominal || parseInt(nominal) <= 0) { showToast('Nominal wajib diisi', 'error'); return; }
+
+    const btn = document.getElementById('btnSavePengeluaran');
+    const btnText = document.getElementById('btnSavePengeluaranText');
+    btn.disabled = true;
+    btnText.textContent = 'Menyimpan...';
+
+    const isEdit = !!currentPengeluaran;
+    const action = isEdit ? 'updatePengeluaran' : 'addPengeluaran';
+    const params = new URLSearchParams({
+      action, tanggal, keterangan, nominal, kategori, team, rekening
+    });
+    if (isEdit) params.append('rowIndex', currentPengeluaran._rowIndex);
+
+    try {
+      const res  = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+      const data = await res.json();
+      if (data.success) {
+        closePengeluaranModal();
+        showToast(isEdit ? '✓ Pengeluaran berhasil diperbarui!' : '✓ Pengeluaran berhasil ditambahkan!', 'success');
+        await silentRefresh();
+        if (currentPage === 'keuangan') renderKeuangan();
+      } else {
+        showToast('Gagal: ' + (data.message || 'Error tidak diketahui'), 'error');
+      }
+    } catch (err) {
+      showToast('Koneksi gagal: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btnText.textContent = 'Simpan';
+    }
+  }
+
+  async function deletePengeluaranData() {
+    if (!currentPengeluaran) return;
+    if (!confirm('Yakin ingin menghapus data pengeluaran ini?')) return;
+
+    const params = new URLSearchParams({
+      action: 'deletePengeluaran',
+      rowIndex: currentPengeluaran._rowIndex
+    });
+
+    try {
+      const res  = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+      const data = await res.json();
+      if (data.success) {
+        closePengeluaranModal();
+        showToast('✓ Pengeluaran berhasil dihapus!', 'success');
+        await silentRefresh();
+        if (currentPage === 'keuangan') renderKeuangan();
+      } else {
+        showToast('Gagal: ' + (data.message || 'Error tidak diketahui'), 'error');
+      }
+    } catch (err) {
+      showToast('Koneksi gagal: ' + err.message, 'error');
+    }
+  }
+
+  /* ══════════════════════════════════════════════
      KEUANGAN
   ══════════════════════════════════════════════ */
   function populateMUAFilter() {
@@ -4626,6 +4918,8 @@ function switchKeuanganTab(tab) {
   document.getElementById('tab-pengeluaran').classList.toggle('active',     tab === 'pengeluaran');
   document.getElementById('tab-pemasukan-lain').classList.toggle('active',  tab === 'pemasukan-lain');
   updateSearchVisibility();
+  const btnTambah = document.getElementById('btnTambahPengeluaran');
+  if (btnTambah) btnTambah.style.display = tab === 'pengeluaran' ? 'inline-flex' : 'none';
   renderKeuangan();
 }
 
@@ -5223,7 +5517,8 @@ document.getElementById('keuanganSummary').innerHTML = `
       : `<span style="color:var(--border);font-size:11px;">—</span>`;
 
     const tableRows = rows.map(p => {
-      return `<tr>
+      const encoded = encodeURIComponent(JSON.stringify(p));
+      return `<tr onclick="openEditPengeluaranModal('${encoded}')" style="cursor:pointer;">
         <td class="date-col" style="white-space:nowrap;">${fmtDate(p.tanggal)}</td>
         <td>${p.keterangan || '—'}</td>
         <td>${badgeKategori(p.kategori)}</td>
@@ -5294,8 +5589,9 @@ document.getElementById('keuanganSummary').innerHTML = `
         renderCalendar();
       }
 
-     if (dataPengeluaran.success) {
-        allPengeluaran = dataPengeluaran.pengeluaran || [];
+    if (dataPengeluaran.success) {
+        allPengeluaran         = dataPengeluaran.pengeluaran || [];
+        allKategoriPengeluaran = dataPengeluaran.kategoriPengeluaran || [];
         const savedKeuBulan2 = document.getElementById('filterKeuanganBulan').value;
         populateKeuanganFilter();
         document.getElementById('filterKeuanganBulan').value = savedKeuBulan2;
