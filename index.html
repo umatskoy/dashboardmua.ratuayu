@@ -2336,9 +2336,15 @@
 </select>
         </div>
         <div class="filter-group" id="filterGroupKeuanganBulan">
-          <label for="filterKeuanganBulan">Bulan:</label>
-          <select id="filterKeuanganBulan" onchange="renderKeuangan()">
-            <option value="">Semua Bulan</option>
+          <label for="filterKeuanganBulanOrder">Order:</label>
+          <select id="filterKeuanganBulanOrder" onchange="renderKeuangan()">
+            <option value="">Semua</option>
+          </select>
+        </div>
+        <div class="filter-group" id="filterGroupKeuanganBulanMakeup">
+          <label for="filterKeuanganBulanMakeup">Make Up:</label>
+          <select id="filterKeuanganBulanMakeup" onchange="renderKeuangan()">
+            <option value="">Semua</option>
           </select>
         </div>
         <button onclick="toggleNominal()" style="
@@ -4602,6 +4608,7 @@ if (blokirInfo) {
     fg2.style.display = page === 'daftar'   ? '' : 'none';
     fg3.style.display = page === 'daftar'   ? '' : 'none';
     fg4.style.display = page === 'keuangan' ? '' : 'none';
+    document.getElementById('filterGroupKeuanganBulanMakeup').style.display = page === 'keuangan' ? '' : 'none';
     fg5.style.display = page === 'daftar'   ? '' : 'none';
 
     const btnToggle = document.getElementById('btnToggleFilter');
@@ -4899,42 +4906,55 @@ function toggleSidebar() {
 
   // GANTI JADI INI:
 function populateKeuanganFilter() {
-  const sel = document.getElementById('filterKeuanganBulan');
-  const months = new Set();
-
-  // Ambil bulan dari booking (tanggal makeup)
+  // ── Dropdown "Bulan Order" (dari timestamp booking) ──
+  const selOrder = document.getElementById('filterKeuanganBulanOrder');
+  const monthsOrder = new Set();
   allBookings.forEach(b => {
-    const d = parseDate(b.tanggal);
-    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+    if (!b.timestamp) return;
+    const d = new Date(b.timestamp);
+    if (!isNaN(d)) monthsOrder.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
   });
-
-  // Ambil bulan dari pengeluaran
-  allPengeluaran.forEach(p => {
-    const d = parseDate(p.tanggal);
-    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
-  });
-
-  // Ambil bulan dari pemasukan lain
-  allPemasukanLain.forEach(p => {
-    const d = parseDate(p.tanggal);
-    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
-  });
-
-  // Ambil bulan dari mutasi
-  allMutasi.forEach(m => {
-    const d = parseDate(m.tanggal);
-    if (d) months.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
-  });
-
-  // Rebuild seluruh dropdown dari awal
-  sel.innerHTML = '<option value="">Semua Bulan</option>';
-  Array.from(months).sort().reverse().forEach(m => {
+  const savedOrder = selOrder.value;
+  selOrder.innerHTML = '<option value="">Semua</option>';
+  Array.from(monthsOrder).sort().reverse().forEach(m => {
     const [yr, mo] = m.split('-');
     const label = new Date(yr, parseInt(mo)-1).toLocaleDateString('id-ID', {month:'long', year:'numeric'});
     const opt = document.createElement('option');
     opt.value = m; opt.textContent = label;
-    sel.appendChild(opt);
+    selOrder.appendChild(opt);
   });
+  selOrder.value = savedOrder;
+
+  // ── Dropdown "Bulan Make Up" (dari tanggal jadwal makeup booking) ──
+  const selMakeup = document.getElementById('filterKeuanganBulanMakeup');
+  const monthsMakeup = new Set();
+  allBookings.forEach(b => {
+    const d = parseDate(b.tanggal);
+    if (d) monthsMakeup.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+  // Tambahkan juga dari pengeluaran/pemasukan/mutasi (untuk tab Ringkasan)
+  allPengeluaran.forEach(p => {
+    const d = parseDate(p.tanggal);
+    if (d) monthsMakeup.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+  allPemasukanLain.forEach(p => {
+    const d = parseDate(p.tanggal);
+    if (d) monthsMakeup.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+  allMutasi.forEach(m => {
+    const d = parseDate(m.tanggal);
+    if (d) monthsMakeup.add(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  });
+  const savedMakeup = selMakeup.value;
+  selMakeup.innerHTML = '<option value="">Semua</option>';
+  Array.from(monthsMakeup).sort().reverse().forEach(m => {
+    const [yr, mo] = m.split('-');
+    const label = new Date(yr, parseInt(mo)-1).toLocaleDateString('id-ID', {month:'long', year:'numeric'});
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = label;
+    selMakeup.appendChild(opt);
+  });
+  selMakeup.value = savedMakeup;
 }
 
 function switchKeuanganTab(tab) {
@@ -4949,27 +4969,40 @@ function switchKeuanganTab(tab) {
   renderKeuangan();
 }
 
-  function renderKeuangan() {
-  const bulanFilter = document.getElementById('filterKeuanganBulan').value;
+ function renderKeuangan() {
+  const bulanOrder  = document.getElementById('filterKeuanganBulanOrder').value;
+  const bulanMakeup = document.getElementById('filterKeuanganBulanMakeup').value;
   if (keuanganActiveTab === 'ringkasan') {
-    renderKeuanganRingkasan(bulanFilter);
+    renderKeuanganRingkasan(bulanOrder, bulanMakeup);
   } else if (keuanganActiveTab === 'pengeluaran') {
-    renderKeuanganPengeluaran(bulanFilter);
+    renderKeuanganPengeluaran(bulanMakeup);
   } else if (keuanganActiveTab === 'pemasukan-lain') {
-    renderKeuanganPemasukanLain(bulanFilter);
+    renderKeuanganPemasukanLain(bulanMakeup);
   } else {
-    renderKeuanganPemasukan(bulanFilter);
+    renderKeuanganPemasukan(bulanOrder, bulanMakeup);
   }
 }
-function renderKeuanganRingkasan(bulanFilter) {
-  
+function renderKeuanganRingkasan(bulanOrder, bulanMakeup) {
+
   const filteredBookings = allBookings.filter(b => {
-    if (!bulanFilter) return true;
-    const d = parseDate(b.tanggal);
-    if (!d) return false;
-    return (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')) === bulanFilter;
+    if (bulanOrder) {
+      if (!b.timestamp) return false;
+      const d = new Date(b.timestamp);
+      if (isNaN(d)) return false;
+      const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      if (key !== bulanOrder) return false;
+    }
+    if (bulanMakeup) {
+      const d = parseDate(b.tanggal);
+      if (!d) return false;
+      const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      if (key !== bulanMakeup) return false;
+    }
+    return true;
   });
 
+  // Pengeluaran/Pemasukan Lain/Mutasi → pakai bulanMakeup sebagai filter tanggal transaksi
+  const bulanFilter = bulanMakeup; // alias supaya kode di bawah tidak perlu banyak diubah
   const filteredPengeluaran = allPengeluaran.filter(p => {
     if (!bulanFilter) return true;
     const d = parseDate(p.tanggal);
@@ -5302,13 +5335,24 @@ pendapatanDiakui += totalPemasukanLainDiakui;
   `;
 }
   
-  function renderKeuanganPemasukan(bulanFilter) {
+function renderKeuanganPemasukan(bulanOrder, bulanMakeup) {
     let rows = allBookings.filter(b => {
-      if (!bulanFilter) return true;
-      const d = parseDate(b.tanggal);
-      if (!d) return false;
-      const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-      return key === bulanFilter;
+      // Filter Bulan Order (timestamp)
+      if (bulanOrder) {
+        if (!b.timestamp) return false;
+        const d = new Date(b.timestamp);
+        if (isNaN(d)) return false;
+        const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+        if (key !== bulanOrder) return false;
+      }
+      // Filter Bulan Make Up (tanggal jadwal)
+      if (bulanMakeup) {
+        const d = parseDate(b.tanggal);
+        if (!d) return false;
+        const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+        if (key !== bulanMakeup) return false;
+      }
+      return true;
     });
 
     if (searchNamaQuery) {
@@ -5597,19 +5641,21 @@ document.getElementById('keuanganSummary').innerHTML = `
         const savedPaket   = document.getElementById('filterPaket').value;
         const savedMUA     = document.getElementById('filterMUA').value;
         const savedStatus  = document.getElementById('filterStatus').value;
-        const savedKeuBulan = document.getElementById('filterKeuanganBulan').value;
+        const savedKeuOrder  = document.getElementById('filterKeuanganBulanOrder').value;
+        const savedKeuMakeup = document.getElementById('filterKeuanganBulanMakeup').value;
 
         populateMonthFilter();
         populatePaketFilter();
         populateMUAFilter();
         populateKeuanganFilter();
 
-        // Restore nilai filter setelah dropdown di-rebuild
-        document.getElementById('filterMonth').value          = savedMonth;
-        document.getElementById('filterPaket').value          = savedPaket;
-        document.getElementById('filterMUA').value            = savedMUA;
-        document.getElementById('filterStatus').value         = savedStatus;
-        document.getElementById('filterKeuanganBulan').value  = savedKeuBulan;
+        // Restore nilai filter setelah dropdown di-rebuilt
+        document.getElementById('filterMonth').value                = savedMonth;
+        document.getElementById('filterPaket').value                = savedPaket;
+        document.getElementById('filterMUA').value                  = savedMUA;
+        document.getElementById('filterStatus').value               = savedStatus;
+        document.getElementById('filterKeuanganBulanOrder').value   = savedKeuOrder;
+        document.getElementById('filterKeuanganBulanMakeup').value  = savedKeuMakeup;
         filterBookings();
         if (currentPage === 'kinerja') renderKinerja();
         renderCalendar();
@@ -5618,9 +5664,11 @@ document.getElementById('keuanganSummary').innerHTML = `
     if (dataPengeluaran.success) {
         allPengeluaran         = dataPengeluaran.pengeluaran || [];
         allKategoriPengeluaran = dataPengeluaran.kategoriPengeluaran || [];
-        const savedKeuBulan2 = document.getElementById('filterKeuanganBulan').value;
+        const savedKeuOrder2  = document.getElementById('filterKeuanganBulanOrder').value;
+        const savedKeuMakeup2 = document.getElementById('filterKeuanganBulanMakeup').value;
         populateKeuanganFilter();
-        document.getElementById('filterKeuanganBulan').value = savedKeuBulan2;
+        document.getElementById('filterKeuanganBulanOrder').value  = savedKeuOrder2;
+        document.getElementById('filterKeuanganBulanMakeup').value = savedKeuMakeup2;
       }
       try {
         const [resPL, resMT] = await Promise.all([
