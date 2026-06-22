@@ -6532,7 +6532,7 @@ function updateRingkasan(subtotal, hargaAddon, hargaTransport, namaPaket, namaAd
     const icon = document.getElementById('rek-icon-' + rek);
     if (icon) icon.style.transform = 'rotate(180deg)';
 
-    const bulanFilter = document.getElementById('filterKeuanganBulan').value;
+    const bulanFilter = document.getElementById('filterKeuanganBulanMakeup').value;
     const inBulan = (tanggal) => {
       if (!bulanFilter) return true;
       const d = parseDate(tanggal);
