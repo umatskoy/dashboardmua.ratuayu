@@ -3224,8 +3224,8 @@ const statusText = status === 'dp'     ? 'DP'
   }
 
   function formatSatuItem(item) {
-    // Cek apakah sudah ada harga (mengandung "Rp")
-    if (item.includes('Rp') || item.includes('rp')) {
+    // Cek apakah sudah ada harga (mengandung "Rp" atau "Gratis")
+    if (item.includes('Rp') || item.includes('rp') || item.toLowerCase().includes('gratis')) {
       // Sudah ada harga — tampilkan apa adanya tapi pastikan format Rp rapi
       return item.replace(/Rp\s*([\d.,]+)/g, (_, angka) => {
         const num = parseInt(angka.replace(/[.,]/g, ''));
