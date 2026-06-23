@@ -4485,9 +4485,14 @@ if (blokirInfo) {
         const hairLabel = b.hair_stylist
           ? `<span style="background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">${b.hair_stylist}</span>`
           : `<span style="color:var(--border);font-size:11px;">—</span>`;
+       const addonLabel = b.addon && b.addon !== 'Tidak ada'
+          ? `<span style="font-size:11px;color:var(--text-secondary);">${b.addon.split('|').map(s => s.trim().split('–')[0].trim()).join(', ')}</span>`
+          : `<span style="color:var(--border);font-size:11px;">—</span>`;
+
         return `<tr onclick="openModal('${encoded}')">
           <td class="name-col">${b.nama || '-'}</td>
           <td class="paket-col">${b.paket || '-'}</td>
+          <td>${addonLabel}</td>
           <td>${muaLabel}</td>
           <td>${hijabLabel}</td>
           <td>${hairLabel}</td>
@@ -4495,13 +4500,13 @@ if (blokirInfo) {
           <td class="price-col">${fmtRp(total)}</td>
           <td>${fmtRp(dp)}</td>
           <td>${sisa > 0 ? '<span style="color:var(--pink);font-weight:600;">'+fmtRp(sisa)+'</span>' : '<span style="color:#2d5a0a;font-weight:600;">Lunas</span>'}</td>
-         <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' : 'Perlu Update Data'}</span></td>
+          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' : 'Perlu Update Data'}</span></td>
         </tr>`;
       }).join('');
 
       body.innerHTML = `<div style="overflow-x:auto;"><table>
         <thead><tr>
-          <th>Nama</th><th>Paket</th><th>MUA</th><th>Hijab</th><th>Hair</th><th>Jam Selesai</th><th>Total</th><th>DP</th><th>Sisa</th><th>Status</th>
+          <th>Nama</th><th>Paket</th><th>Add On</th><th>MUA</th><th>Hijab</th><th>Hair</th><th>Jam Selesai</th><th>Total</th><th>DP</th><th>Sisa</th><th>Status</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table></div>`;
