@@ -4280,6 +4280,7 @@ if (booking.bukti) {
    // Build booking map: key = "YYYY-MM-DD" → array of bookings
 const bookingMap = {};
 allBookings.forEach(b => {
+  if (b.status === 'cancel' || b.status === 'refund') return;
   const d = parseDate(b.tanggal);
   if (!d) return;
   const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -4453,6 +4454,7 @@ if (blokirInfo) {
     calHidePopover();
 
     const bookingsOnDate = allBookings.filter(b => {
+      if (b.status === 'cancel' || b.status === 'refund') return false;
       const d = parseDate(b.tanggal);
       if (!d) return false;
       const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
