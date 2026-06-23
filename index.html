@@ -3129,8 +3129,21 @@ const statusText = status === 'dp'     ? 'DP'
         ? `<span style="background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;white-space:nowrap;">${booking.hair_stylist}</span>`
         : `<span style="color:var(--border);font-size:11px;">—</span>`;
 
-      const addonLabel = booking.addon && booking.addon !== 'Tidak ada'
-        ? `<span style="font-size:12px;color:var(--text-secondary);">${booking.addon.split('|').map(s => s.trim().split('–')[0].trim()).join(', ')}</span>`
+      const addonParts = [];
+      if (booking.addon && booking.addon !== 'Tidak ada') {
+        booking.addon.split('|').forEach(s => {
+          const nama = s.trim().split('–')[0].trim();
+          if (nama) addonParts.push(nama);
+        });
+      }
+      if (booking.addon_custom && booking.addon_custom !== 'Tidak ada') {
+        booking.addon_custom.split('|').forEach(s => {
+          const nama = s.trim().split('–')[0].trim();
+          if (nama) addonParts.push(nama);
+        });
+      }
+      const addonLabel = addonParts.length
+        ? `<span style="font-size:12px;color:var(--text-secondary);">${addonParts.join(', ')}</span>`
         : `<span style="color:var(--border);font-size:11px;">—</span>`;
 
       html += `<tr onclick="openModal('${encodeURIComponent(JSON.stringify(booking))}')">
@@ -4485,10 +4498,22 @@ if (blokirInfo) {
         const hairLabel = b.hair_stylist
           ? `<span style="background:#eff6ff;color:#2563eb;border:0.5px solid rgba(37,99,235,0.25);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:600;">${b.hair_stylist}</span>`
           : `<span style="color:var(--border);font-size:11px;">—</span>`;
-       const addonLabel = b.addon && b.addon !== 'Tidak ada'
-          ? `<span style="font-size:11px;color:var(--text-secondary);">${b.addon.split('|').map(s => s.trim().split('–')[0].trim()).join(', ')}</span>`
+       const addonParts = [];
+        if (b.addon && b.addon !== 'Tidak ada') {
+          b.addon.split('|').forEach(s => {
+            const nama = s.trim().split('–')[0].trim();
+            if (nama) addonParts.push(nama);
+          });
+        }
+        if (b.addon_custom && b.addon_custom !== 'Tidak ada') {
+          b.addon_custom.split('|').forEach(s => {
+            const nama = s.trim().split('–')[0].trim();
+            if (nama) addonParts.push(nama);
+          });
+        }
+        const addonLabel = addonParts.length
+          ? `<span style="font-size:11px;color:var(--text-secondary);">${addonParts.join(', ')}</span>`
           : `<span style="color:var(--border);font-size:11px;">—</span>`;
-
         return `<tr onclick="openModal('${encoded}')">
           <td class="name-col">${b.nama || '-'}</td>
           <td class="paket-col">${b.paket || '-'}</td>
