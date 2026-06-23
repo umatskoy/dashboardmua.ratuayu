@@ -3073,12 +3073,12 @@ function maskRp(n) {
       return;
     }
 
-    let html = `<table>
+   let html = `<table>
       <thead>
         <tr>
+          <th>Tanggal</th>
           <th>Nama</th>
           <th>Paket</th>
-          <th>Tanggal</th>
           <th>Jam</th>
           <th>Lokasi</th>
           <th>MUA</th>
@@ -3134,9 +3134,9 @@ const statusText = status === 'dp'     ? 'DP'
         : `<span style="color:var(--border);font-size:11px;">—</span>`;
 
       html += `<tr onclick="openModal('${encodeURIComponent(JSON.stringify(booking))}')">
+        <td class="date-col">${fmtDate(booking.tanggal)}</td>
         <td class="name-col">${booking.nama || '-'}</td>
         <td class="paket-col">${booking.paket ? booking.paket.split('|')[0].trim() : '-'}</td>
-        <td class="date-col">${fmtDate(booking.tanggal)}</td>
         <td style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">${fmtTime(booking.jam_selesai) !== '-' ? fmtTime(booking.jam_selesai) : '—'}</td>
         <td style="font-size:13px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${booking.lokasi || ''}">${booking.lokasi || '—'}</td>
         <td>${muaLabel}</td>
