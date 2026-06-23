@@ -2461,6 +2461,8 @@
         <div class="calendar-grid" id="calGrid"></div>
         <div class="calendar-legend">
           <div class="legend-item"><span class="legend-dot" style="background:var(--pink);"></span>Hari ini</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span>Perlu Update Data</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#2d5a0a;"></span>Butuh Team</div>
           <div class="legend-item"><span class="legend-dot" style="background:rgba(212,83,126,0.15); border:1px solid rgba(212,83,126,0.3); border-radius:50%;"></span>Ada Booking</div>
         </div>
       </div>
@@ -4422,7 +4424,7 @@ if (blokirInfo) {
       <div class="cal-popover-item">
         <span class="cal-popover-name">${b.nama || 'Tanpa Nama'}</span>
         <span class="cal-popover-status">
-          <span class="status-badge status-${b.status}">${b.status === 'confirmed' ? 'Butuh Team' : b.status === 'dp' ? 'DP' : b.status === 'dp2' ? 'DP ke-2' : b.status === 'lunas' ? 'Lunas' : b.status === 'done' ? 'Done' : 'Cancel'}</span>
+          <span class="status-badge status-${b.status}">${b.status === 'confirmed' ? 'Butuh Team' : b.status === 'dp' ? 'DP' : b.status === 'dp2' ? 'DP ke-2' : b.status === 'lunas' ? 'Lunas' : b.status === 'done' ? 'Done' : 'Perlu Update Data'}</span>
         </span>
       </div>`).join('');
 
@@ -4523,7 +4525,7 @@ if (blokirInfo) {
           <td class="price-col">${fmtRp(total)}</td>
           <td>${fmtRp(dp)}</td>
           <td>${sisa > 0 ? '<span style="color:var(--pink);font-weight:600;">'+fmtRp(sisa)+'</span>' : '<span style="color:#2d5a0a;font-weight:600;">Lunas</span>'}</td>
-          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund'}</span></td>
+          <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' : 'Perlu Update Data'}</span></td>
         </tr>`;
       }).join('');
 
@@ -5469,7 +5471,7 @@ document.getElementById('keuanganSummary').innerHTML = `
         <td class="price-col">${fmtRp(dp)}</td>
         <td class="price-col">${dp2 > 0 ? fmtRp(dp2) : '—'}</td>
         <td class="price-col">${sisaHtml}</td>
-        <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' }</span></td>
+        <td><span class="status-badge status-${status}">${status === 'confirmed' ? 'Butuh Team' : status === 'dp' ? 'DP' : status === 'dp2' ? 'DP ke-2' : status === 'lunas' ? 'Lunas' : status === 'done' ? 'Done' : status === 'cancel' ? 'Cancel' : status === 'refund' ? 'Refund' : 'Perlu Update Data'}</span></td>
       </tr>`;
     }).join('');
 
