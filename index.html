@@ -3508,13 +3508,14 @@ if (booking.bukti) {
     lines.push("Nama     : " + v(b.nama));
     lines.push("WA       : " + v(b.wa));
     lines.push("Instagram: " + v(b.instagram));
-    lines.push("Lokasi   : " + v(b.lokasi));
+    
 
     lines.push("");
     lines.push("📅 JADWAL");
     lines.push("Tanggal             : " + (v(b.tanggal) !== '-' ? fmtDateTime(b.tanggal) : '-'));
     lines.push("Estimasi Jam Mulai  : " + (v(b.estimasi_jam_mulai) !== '-' ? fmtTime(b.estimasi_jam_mulai) : '-'));
     lines.push("Jam Selesai         : " + (v(b.jam_selesai) !== '-' ? fmtTime(b.jam_selesai) : '-'));
+    lines.push("Lokasi         : " + v(b.lokasi));
     lines.push("Total Orang    : " + (v(b.jumlah_orang) !== '-' ? v(b.jumlah_orang) + " orang" : '-'));
     lines.push("MUA Bertugas   : " + v(b.mua_bertugas));
     lines.push("MUA Bertugas 2 : " + v(b.mua_bertugas_2));
