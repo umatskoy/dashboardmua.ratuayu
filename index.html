@@ -3294,10 +3294,6 @@ const statusText = status === 'dp'     ? 'DP'
           <span class="detail-label">Instagram</span>
           <span class="detail-value">${booking.instagram || '-'}</span>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Lokasi</span>
-          <span class="detail-value">${booking.lokasi || '-'}</span>
-        </div>
       </div>
 
       <div class="detail-section">
@@ -3315,6 +3311,10 @@ const statusText = status === 'dp'     ? 'DP'
         <div class="detail-row">
           <span class="detail-label">Jam Selesai</span>
           <span class="detail-value">${fmtTime(booking.jam_selesai)}</span>
+        </div>
+         <div class="detail-row">
+          <span class="detail-label">Lokasi</span>
+          <span class="detail-value">${booking.lokasi || '-'}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Total Orang</span>
